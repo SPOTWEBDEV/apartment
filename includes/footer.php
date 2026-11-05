@@ -15,7 +15,7 @@
         <li><a class="hover:text-white" href="about.php">About <?= e(cfg('site_name')) ?></a></li>
         <li><a class="hover:text-white" href="about.php#faqs">FAQs</a></li>
         <li><a class="hover:text-white" href="index.php#reviews">Guest reviews</a></li>
-        <li><a class="hover:text-white" href="index.php#book">Reserve a room</a></li>
+        <li><a class="hover:text-white" href="rooms.php#booking">Reserve a room</a></li>
         <li><a class="hover:text-white" href="contact.php">Contact</a></li>
       </ul>
     </nav>
@@ -23,7 +23,7 @@
       <h2 class="font-display text-lg text-white">Experience</h2>
       <ul class="mt-4 space-y-2.5 text-sm">
         <?php foreach (['Balsa raft','Kayaking and paddle board','Snorkeling and boat tours','Banana boat','Kids activities','Weddings and corporate'] as $x): ?>
-          <li><a class="hover:text-white" href="index.php#<?= str_starts_with($x,'Weddings') ? 'events' : 'experience' ?>"><?= $x ?></a></li>
+          <li><a class="hover:text-white" href="<?= str_starts_with($x,'Weddings') ? 'events.php' : 'index.php#experience' ?>"><?= $x ?></a></li>
         <?php endforeach; ?>
       </ul>
     </nav>
@@ -54,6 +54,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 <script src="assets/js/app.js" defer></script>
+<?php foreach (($extra_scripts ?? []) as $src): ?><script src="<?= e($src) ?>" defer></script>
+<?php endforeach; ?>
 <script src="assets/js/motion.js" defer></script>
 </body>
 </html>

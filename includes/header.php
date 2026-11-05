@@ -5,8 +5,8 @@ $page_desc  = $page_desc ?? cfg('description');
 $active     = $active ?? '';
 $solid      = $solid ?? true;   // false on the landing page (transparent over hero)
 $links = [
-  ['about.php','About','about'], ['index.php#rooms','Rooms',''], ['index.php#experience','Experience',''],
-  ['index.php#dining','Dining',''], ['index.php#events','Weddings and corporate',''], ['contact.php','Contact','contact'],
+  ['about.php','About','about'], ['rooms.php','Rooms','rooms'], ['index.php#experience','Experience',''],
+  ['dining.php','Dining','dining'], ['events.php','Weddings and corporate','events'], ['contact.php','Contact','contact'],
 ];
 ?>
 <!doctype html>
@@ -45,7 +45,7 @@ tailwind.config = { theme: { extend: {
       <?php endforeach; ?>
     </nav>
     <div class="flex items-center gap-3">
-      <a href="index.php#book" class="rounded-full bg-sunset px-5 py-2.5 text-sm font-semibold text-lagoon hover:bg-bronze hover:text-white">Book a stay</a>
+      <a href="rooms.php#booking" class="rounded-full bg-sunset px-5 py-2.5 text-sm font-semibold text-lagoon hover:bg-bronze hover:text-white">Book a stay</a>
       <button id="menuBtn" class="rounded-full p-2 lg:hidden" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>

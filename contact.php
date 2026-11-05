@@ -13,6 +13,7 @@ if (!empty($_GET['room'])) {
   if (!empty($_GET['guests'])) $msg .= ' for ' . (int)$_GET['guests'] . ' guests';
   $msg .= '.';
 }
+if (($_GET['topic'] ?? '') === 'table') $msg = 'I would like to reserve a table for ___ guests on ___ at ___.';
 include __DIR__ . '/includes/header.php';
 ?>
 <main>
@@ -37,22 +38,7 @@ include __DIR__ . '/includes/header.php';
       <p class="mt-2 text-lagoon/80">Check-in from <?= e(cfg('check_in')) ?>. Check-out by <?= e(cfg('check_out')) ?>.</p></div>
   </div>
 
-  <form id="inquiryForm" data-reveal class="space-y-4 rounded-3xl bg-white p-6 shadow-sm sm:p-8 lg:col-span-3" novalidate>
-    <div class="grid gap-4 sm:grid-cols-2">
-      <div><label class="mb-1 block text-sm font-medium" for="name">Name</label><input class="field" id="name" name="name" autocomplete="name"><p class="err mt-1 text-sm text-red-700" data-for="name"></p></div>
-      <div><label class="mb-1 block text-sm font-medium" for="email">Email</label><input class="field" id="email" name="email" type="email" autocomplete="email"><p class="err mt-1 text-sm text-red-700" data-for="email"></p></div>
-    </div>
-    <div><label class="mb-1 block text-sm font-medium" for="type">I am asking about</label>
-      <select class="field" id="type" name="type">
-        <?php foreach (['stay'=>'A stay','wedding'=>'A wedding','corporate'=>'A corporate event','other'=>'Something else'] as $v=>$l): ?>
-          <option value="<?= $v ?>"<?= $v === $type ? ' selected' : '' ?>><?= $l ?></option>
-        <?php endforeach; ?>
-      </select></div>
-    <div><label class="mb-1 block text-sm font-medium" for="message">Message</label><textarea class="field" id="message" name="message" rows="5"><?= e($msg) ?></textarea><p class="err mt-1 text-sm text-red-700" data-for="message"></p></div>
-    <input type="text" name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
-    <button class="w-full rounded-full bg-bronze px-7 py-3.5 font-semibold text-white hover:bg-lagoon disabled:opacity-60">Send inquiry</button>
-    <p id="formMsg" class="min-h-6 text-sm" role="status" aria-live="polite"></p>
-  </form>
+  <?php $form_class = 'lg:col-span-3'; $event_fields = false; include __DIR__ . '/includes/inquiry-form.php'; ?>
 </section>
 </main>
 <?php include __DIR__ . '/includes/footer.php'; ?>

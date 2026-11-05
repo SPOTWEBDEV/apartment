@@ -25,3 +25,11 @@ html.motion [data-hero-title]{visibility:hidden}
 html.motion [data-hero-sub],html.motion [data-hero-form]{opacity:0}
 html{scroll-behavior:smooth}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* Booking stepper (a real sequence, so numbered) */
+.step{display:flex;align-items:center;gap:.6rem;color:rgba(11,42,67,.45)}
+.step .dot{display:grid;place-items:center;width:1.75rem;height:1.75rem;border-radius:9999px;border:1.5px solid currentColor;font-size:.8rem;font-weight:600}
+.step.is-current{color:#0B2A43;font-weight:600}
+.step.is-current .dot{background:#A8743B;border-color:#A8743B;color:#fff}
+.step.is-done{color:#0B2A43}
+.step.is-done .dot{background:#0B2A43;border-color:#0B2A43;color:#fff}

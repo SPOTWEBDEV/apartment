@@ -15,6 +15,10 @@
     return { status: res.status, ...data };
   }
 
+  // Local-date ISO string (toISOString alone returns UTC, which is wrong for Manila mornings)
+  const iso = d => new Date(d.getTime() - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10);
+  window.CL = { api, esc, peso, iso, reduce };
+
   // Header: solid after scrolling (always solid on inner pages)
   const nav = $('#nav');
   const onScroll = () => nav.classList.toggle('is-solid', nav.dataset.solid === '1' || scrollY > 40);
@@ -32,7 +36,6 @@
   const book = $('#book');
   if (book) {
     const bookMsg = $('#bookMsg');
-    const iso = d => d.toISOString().slice(0, 10);
     book.checkin.min = iso(new Date());
     book.checkout.min = iso(new Date(Date.now() + 864e5));
     book.checkin.addEventListener('change', () => {
@@ -62,12 +65,12 @@
         ? `${r.rooms.length} ${r.rooms.length === 1 ? 'room is' : 'rooms are'} available for ${r.nights} ${r.nights === 1 ? 'night' : 'nights'}`
         : 'No rooms fit those dates and guest count. Try fewer guests or different dates.';
       $('#resultsList').innerHTML = r.rooms.map(x => {
-        const href = 'contact.php?' + new URLSearchParams({ type: 'stay', room: x.name, ...q });
+        const href = 'rooms.php?' + new URLSearchParams({ room: x.id, ...q }) + '#booking';
         return `<article class="rounded-3xl bg-white p-6 shadow-sm">
           <h3 class="font-display text-xl">${esc(x.name)}</h3>
           <p class="mt-1 text-sm text-lagoon/70">Sleeps up to ${x.guests}. ${peso(x.nightly)} a night.</p>
           <p class="mt-4 font-display text-2xl">${peso(x.total)} <span class="font-sans text-sm text-lagoon/60">total</span></p>
-          <a href="${esc(href)}" class="mt-4 inline-block rounded-full bg-bronze px-5 py-2.5 text-sm font-semibold text-white hover:bg-lagoon">Request this room</a>
+          <a href="${esc(href)}" class="mt-4 inline-block rounded-full bg-bronze px-5 py-2.5 text-sm font-semibold text-white hover:bg-lagoon">Book this room</a>
         </article>`;
       }).join('');
       sec.classList.remove('hidden');
@@ -83,9 +86,11 @@
       try {
         const r = await api('reviews.php');
         if (!r.ok) throw 0;
+        const avg = r.reviews.reduce((t, v) => t + v.rating, 0) / r.reviews.length;
+        const label = $('#revAvg'); if (label) label.textContent = `${avg.toFixed(1)} out of 5 from ${r.reviews.length} guest reviews`;
         list.innerHTML = r.reviews.map(v => `
           <figure class="flex min-w-[85%] snap-start flex-col rounded-3xl bg-white p-7 shadow-sm md:min-w-[calc(33.333%-1rem)]">
-            <p class="text-bronze" role="img" aria-label="${v.rating} out of 5 stars">${'★'.repeat(v.rating)}${'☆'.repeat(5 - v.rating)}</p>
+            <div class="flex items-center justify-between gap-3"><p class="text-bronze" role="img" aria-label="${v.rating} out of 5 stars">${'★'.repeat(v.rating)}${'☆'.repeat(5 - v.rating)}</p><p class="text-sm text-lagoon/60">${esc(v.date)}</p></div>
             <h3 class="mt-2 font-display text-xl">${esc(v.title)}</h3>
             <blockquote class="mt-3 flex-1 text-lagoon/80">${esc(v.text)}</blockquote>
             <figcaption class="mt-5 text-sm"><span class="font-semibold">${esc(v.name)}</span><span class="text-lagoon/60">, ${esc(v.stay)}</span></figcaption>
