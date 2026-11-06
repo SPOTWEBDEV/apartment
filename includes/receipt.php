@@ -14,6 +14,9 @@ function base_url(int $up = 2): string {
 /** Relative link used on the website (pages live in the project root). */
 function receipt_path(array $b): string { return 'receipt.php?ref=' . rawurlencode($b['ref']) . '&t=' . $b['token']; }
 
+/** Private page where the guest sends payment details for the resort to approve. */
+function pay_path(array $b): string { return 'pay.php?ref=' . rawurlencode($b['ref']) . '&t=' . $b['token']; }
+
 function receipt_booking(string $ref, string $token): ?array {
   $s = db()->prepare('SELECT * FROM bookings WHERE ref = ?'); $s->execute([$ref]);
   $b = $s->fetch();
@@ -60,7 +63,7 @@ function receipt_pdf(array $b): string {
 
   // Stay
   $y += 82; $pdf->text($L, $y, 'STAY', 8, true, $bronze); $y += 8;
-  $rows = [['Room', $b['room_name']], ['Check-in', $d($b['checkin']) . ' from ' . cfg('check_in')], ['Check-out', $d($b['checkout']) . ' by ' . cfg('check_out')],
+  $rows = [['Room', $b['room_name']], ['Check-in', $d($b['checkin']) . (cfg('check_in') ? ' from ' . cfg('check_in') : '')], ['Check-out', $d($b['checkout']) . (cfg('check_out') ? ' by ' . cfg('check_out') : '')],
            ['Nights', (string)$b['nights']], ['Guests', (string)$b['guests']], ['Booked on', $d(substr((string)$b['created_at'], 0, 10))]];
   foreach ($rows as [$k, $v]) { $y += 17; $pdf->text($L, $y, $k, 10, false, $gray); $pdf->text(150, $y, (string)$v, 10, true); }
 
@@ -90,7 +93,7 @@ function receipt_pdf(array $b): string {
 
   // Footer
   $note = $b['status'] === 'pending'
-    ? 'Your booking request has been received. The reservations team confirms by email or WhatsApp, and your stay is not guaranteed until it is confirmed.'
+    ? 'Your booking request has been received. The reservations team confirms by email or phone, and your stay is not guaranteed until it is confirmed.'
     : ($b['status'] === 'cancelled' ? 'This booking has been cancelled.' : 'Thank you for choosing ' . cfg('site_name') . '. Please show this receipt or your reference at check-in.');
   $note .= ' This is a booking receipt and not an official tax invoice. Rates and balances are subject to the resort\'s confirmation.';
   $fy = 748; $pdf->line($L, $fy - 14, $R, $fy - 14);

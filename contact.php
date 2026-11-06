@@ -4,7 +4,7 @@ $page_title = 'Contact | ' . cfg('site_name');
 $page_desc = 'Contact ' . cfg('site_name') . ' reservations for stays, weddings, corporate events and table bookings.';
 $active = 'contact';
 
-$type = in_array($_GET['type'] ?? '', ['stay','wedding','corporate','other'], true) ? $_GET['type'] : 'stay';
+$type = in_array($_GET['type'] ?? '', ['stay','table','wedding','corporate','other'], true) ? $_GET['type'] : 'stay';
 $msg = '';
 if (!empty($_GET['room'])) {
   $date = fn($k) => preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET[$k] ?? '') ? $_GET[$k] : '';
@@ -13,7 +13,6 @@ if (!empty($_GET['room'])) {
   if (!empty($_GET['guests'])) $msg .= ' for ' . (int)$_GET['guests'] . ' guests';
   $msg .= '.';
 }
-if (($_GET['topic'] ?? '') === 'table') $msg = 'I would like to reserve a table for ___ guests on ___ at ___.';
 include __DIR__ . '/includes/header.php';
 ?>
 <main>
@@ -32,13 +31,13 @@ include __DIR__ . '/includes/header.php';
     <div data-reveal><h2 class="font-display text-xl">Phone and email</h2>
       <p class="mt-2 text-lagoon/80"><a class="underline" href="tel:<?= e(cfg('phone_tel')) ?>"><?= e(cfg('phone')) ?></a><br>
       <a class="underline" href="mailto:<?= e(cfg('email')) ?>"><?= e(cfg('email')) ?></a></p></div>
-    <div data-reveal><h2 class="font-display text-xl">WhatsApp</h2>
-      <a href="<?= e(whatsapp_url()) ?>" rel="noopener" class="mt-3 inline-block rounded-full bg-lagoon px-6 py-3 font-semibold text-white hover:bg-tide">Chat on WhatsApp</a></div>
-    <div data-reveal><h2 class="font-display text-xl">Check-in and check-out</h2>
-      <p class="mt-2 text-lagoon/80">Check-in from <?= e(cfg('check_in')) ?>. Check-out by <?= e(cfg('check_out')) ?>.</p></div>
+    <?php if (messenger_url()): ?><div data-reveal><h2 class="font-display text-xl">Messenger</h2>
+      <a href="<?= e(messenger_url()) ?>" rel="noopener" class="mt-3 inline-block rounded-full bg-lagoon px-6 py-3 font-semibold text-white hover:bg-tide">Chat on Messenger</a></div><?php endif; ?>
+    <?php if (cfg('check_in') && cfg('check_out')): ?><div data-reveal><h2 class="font-display text-xl">Check-in and check-out</h2>
+      <p class="mt-2 text-lagoon/80">Check-in from <?= e(cfg('check_in')) ?>. Check-out by <?= e(cfg('check_out')) ?>.</p></div><?php endif; ?>
   </div>
 
-  <?php $form_class = 'lg:col-span-3'; $event_fields = false; include __DIR__ . '/includes/inquiry-form.php'; ?>
+  <?php $form_class = 'lg:col-span-3'; include __DIR__ . '/includes/inquiry-form.php'; ?>
 </section>
 </main>
 <?php include __DIR__ . '/includes/footer.php'; ?>

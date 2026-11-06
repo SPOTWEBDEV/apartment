@@ -53,7 +53,7 @@ $dishes = [
   <div data-reveal class="mx-auto max-w-3xl px-5 text-center">
     <h2 class="font-display text-4xl sm:text-5xl">Booking a boodle fight or a group dinner?</h2>
     <p class="mt-4 text-lg text-lagoon/80">Tell us the date and how many are coming. We will confirm the menu and the table.</p>
-    <a href="contact.php?type=other&topic=table" class="mt-8 inline-block rounded-full bg-bronze px-8 py-3.5 font-semibold text-white hover:bg-lagoon">Reserve a table</a>
+    <a href="contact.php?type=table" class="mt-8 inline-block rounded-full bg-bronze px-8 py-3.5 font-semibold text-white hover:bg-lagoon">Reserve a table</a>
   </div>
 </section>
 </main>

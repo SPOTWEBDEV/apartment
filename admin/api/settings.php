@@ -10,7 +10,7 @@ function put(string $k, string $v): void {
 switch ($action) {
   case 'get':
     respond(['ok'=>true, 'values'=>[
-      'site_name'=>cfg('site_name'), 'tagline'=>cfg('tagline'), 'email'=>cfg('email'), 'phone'=>cfg('phone'), 'whatsapp'=>cfg('whatsapp'),
+      'site_name'=>cfg('site_name'), 'tagline'=>cfg('tagline'), 'email'=>cfg('email'), 'phone'=>cfg('phone'), 'messenger'=>cfg('messenger'), 'payment_instructions'=>cfg('payment_instructions', ''),
       'address'=>implode("\n", cfg('address', [])), 'check_in'=>cfg('check_in'), 'check_out'=>cfg('check_out'), 'max_nights'=>cfg('max_nights', 30),
       'currency'=>cfg('currency'), 'facebook'=>cfg('social.facebook'), 'instagram'=>cfg('social.instagram'),
       'crypto_enabled'=>(settings_all()['crypto_enabled'] ?? '0') === '1', 'wallets'=>crypto_wallets(false)]]);
@@ -22,10 +22,12 @@ switch ($action) {
       put('site_name', clean(p('site_name'), 80)); put('tagline', clean(p('tagline'), 140));
     } elseif ($s === 'contact') {
       if (!filter_var(p('email'), FILTER_VALIDATE_EMAIL)) respond(['ok'=>false,'error'=>'Enter a valid email address.'], 422);
-      $wa = preg_replace('/\D/', '', p('whatsapp'));
-      if ($wa !== '' && (strlen($wa) < 8 || strlen($wa) > 15)) respond(['ok'=>false,'error'=>'WhatsApp needs the country code and digits only, for example 639171234567.'], 422);
-      put('email', p('email')); put('phone', clean(p('phone'), 40)); put('phone_tel', preg_replace('/[^\d+]/', '', p('phone'))); put('whatsapp', $wa);
+      $mh = messenger_handle(p('messenger'));
+      if (p('messenger') !== '' && $mh === '') respond(['ok'=>false,'error'=>'That does not look like a Facebook page name. Use the part after facebook.com/ in your page link.'], 422);
+      put('email', p('email')); put('phone', clean(p('phone'), 40)); put('phone_tel', preg_replace('/[^\d+]/', '', p('phone'))); put('messenger', $mh);
       put('address', implode("\n", array_filter(array_map(fn($x) => clean($x, 120), preg_split('/\R/', p('address'))))));
+    } elseif ($s === 'payments') {
+      put('payment_instructions', mb_substr(trim(strip_tags(p('payment_instructions'))), 0, 1500));
     } elseif ($s === 'stay') {
       $n = pint('max_nights'); if ($n < 1 || $n > 90) respond(['ok'=>false,'error'=>'Maximum nights must be between 1 and 90.'], 422);
       put('check_in', clean(p('check_in'), 20)); put('check_out', clean(p('check_out'), 20)); put('max_nights', (string)$n); put('currency', clean(p('currency'), 3) ?: '₱');
