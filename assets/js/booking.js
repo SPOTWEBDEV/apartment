@@ -137,7 +137,7 @@
     const btn = guestForm.querySelector('button'); btn.disabled = true;
     try {
       const r = await api('booking.php', { ...state.q, room: state.room.id, ...Object.fromEntries(new FormData(guestForm)), code: state.discount ? state.discount.code : '' });
-      if (r.ok) { $('#refCode').textContent = r.ref; $('#receiptLink').href = r.receipt; state.summary = r.summary; $('#imagePreview').classList.add('hidden'); guestMsg.textContent = ''; guestForm.reset(); go(4); loadCrypto(r.ref); return; }
+      if (r.ok) { $('#refCode').textContent = r.ref; $('#receiptLink').href = r.receipt; $('#payLink').href = r.pay; state.summary = r.summary; $('#imagePreview').classList.add('hidden'); guestMsg.textContent = ''; guestForm.reset(); go(4); loadCrypto(r.ref); return; }
       if (r.unavailable) { guestMsg.textContent = r.error; if (await search(state.q)) go(2); return; }
       for (const [k, m] of Object.entries(r.errors || {})) { const p = guestForm.querySelector(`.err[data-for="${k}"]`); if (p) p.textContent = m; }
       guestMsg.textContent = r.errors ? 'Fix the highlighted fields and send again.' : (r.error || 'Could not send. Try again.');

@@ -8,9 +8,12 @@ $f = fn($n, $l, $t = 'text', $x = '') => '<div><label class="lbl" for="s_' . $n 
 <div class="max-w-5xl">
 <?php
 $sec('business', 'Business', 'Shown in the header, footer, page titles and emails.', $f('site_name', 'Site name') . $f('tagline', 'Tagline'));
-$sec('contact', 'Contact', 'Used on the contact page, footer, WhatsApp button and as the inbox for inquiries and booking requests.',
-  $f('email', 'Reservations email', 'email') . '<div class="grid gap-4 sm:grid-cols-2">' . $f('phone', 'Phone') . $f('whatsapp', 'WhatsApp number', 'text', 'placeholder="639171234567"') . '</div>'
+$sec('contact', 'Contact', 'Used on the contact page, footer, Messenger chat button and as the inbox for inquiries and booking requests.',
+  $f('email', 'Reservations email', 'email') . '<div class="grid gap-4 sm:grid-cols-2">' . $f('phone', 'Phone') . $f('messenger', 'Facebook page for Messenger', 'text', 'placeholder="yourpagename"') . '</div>'
+  . '<p class="-mt-2 text-xs text-slate-500">Type the page name from your page link (facebook.com/<strong>yourpagename</strong>). Guests who tap Chat with us open a Messenger conversation with that page. Leave empty to hide the button.</p>'
   . '<div><label class="lbl" for="s_address">Address (one line per row)</label><textarea class="input" id="s_address" name="address" rows="3"></textarea></div>');
+$sec('payments', 'Payment instructions', 'Shown to guests on their payment page, where they send you their payment details for you to approve.',
+  '<div><label class="lbl" for="s_payment_instructions">How guests should pay</label><textarea class="input" id="s_payment_instructions" name="payment_instructions" rows="6" placeholder="Bank name, account name and number, GCash or Maya number, and anything else guests need"></textarea></div>');
 $sec('stay', 'Stay rules', 'Applied to the booking flow and shown on the FAQ and contact pages.',
   '<div class="grid gap-4 sm:grid-cols-2">' . $f('check_in', 'Check-in time') . $f('check_out', 'Check-out time') . $f('max_nights', 'Maximum nights per request', 'number', 'min="1" max="90"') . $f('currency', 'Currency symbol', 'text', 'maxlength="3"') . '</div>');
 $sec('social', 'Social links', 'Leave empty to keep the placeholder link.', $f('facebook', 'Facebook page', 'url', 'placeholder="https://facebook.com/yourpage"') . $f('instagram', 'Instagram profile', 'url', 'placeholder="https://instagram.com/yourhandle"'));
