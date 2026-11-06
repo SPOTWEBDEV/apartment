@@ -6,10 +6,10 @@ $active = 'about';
 $faqs = [
   ['Is the resort pet friendly?', 'Yes. Guests bring their dogs and use the lawns and the sand. Tell us when you book so we can prepare.'],
   ['How far is it from Manila?', 'About two and a half hours south of Manila. The address is ' . implode(', ', cfg('address')) . '.'],
-  ['What time are check-in and check-out?', 'Check-in is from ' . cfg('check_in') . ' and check-out is by ' . cfg('check_out') . '.'],
   ['Which activities are included?', 'The balsa raft is free for guests. Other activities such as kayaking, paddle boards, boat tours and banana boat rides can be arranged at the front desk.'],
   ['Can I hold a wedding or company event here?', 'Yes. Send us the date and your group size on the contact page and the reservations team will reply with options.'],
 ];
+if (cfg('check_in') && cfg('check_out')) array_splice($faqs, 2, 0, [['What time are check-in and check-out?', 'Check-in is from ' . cfg('check_in') . ' and check-out is by ' . cfg('check_out') . '.']]);
 include __DIR__ . '/includes/header.php';
 ?>
 <main>

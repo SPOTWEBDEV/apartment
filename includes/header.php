@@ -5,8 +5,8 @@ $page_desc  = $page_desc ?? cfg('description');
 $active     = $active ?? '';
 $solid      = $solid ?? true;   // false on the landing page (transparent over hero)
 $links = [
-  ['about.php','About','about'], ['rooms.php','Rooms','rooms'], ['index.php#experience','Experience',''],
-  ['dining.php','Dining','dining'], ['events.php','Weddings and corporate','events'], ['contact.php','Contact','contact'],
+  ['about.php','About','about'], ['rooms.php','Rooms','rooms'], ['experience.php','Experience','experience'], ['dining.php','Dining','dining'],
+  ['events.php','Weddings and corporate','events'], ['gallery.php','Gallery','gallery'], ['contact.php','Contact','contact'],
 ];
 ?>
 <!doctype html>
@@ -15,6 +15,7 @@ $links = [
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?= e($page_title) ?></title>
+<meta name="robots" content="<?= e($robots ?? 'index,follow') ?>">
 <meta name="description" content="<?= e($page_desc) ?>">
 <meta property="og:title" content="<?= e($page_title) ?>">
 <meta property="og:description" content="<?= e($page_desc) ?>">
@@ -39,19 +40,19 @@ tailwind.config = { theme: { extend: {
 <header id="nav" data-solid="<?= $solid ? '1' : '0' ?>" class="fixed inset-x-0 top-0 z-50 <?= $solid ? 'is-solid' : '' ?>">
   <div class="mx-auto flex max-w-7xl items-center justify-between px-5 py-3 lg:px-8">
     <a href="index.php" aria-label="<?= e(cfg('site_name')) ?> home"><img src="assets/img/logo.png" alt="<?= e(cfg('site_name')) ?>" class="logo"></a>
-    <nav class="hidden items-center gap-7 text-sm font-medium lg:flex" aria-label="Main">
+    <nav class="hidden items-center gap-6 text-sm font-medium xl:flex" aria-label="Main">
       <?php foreach ($links as [$href,$label,$key]): ?>
         <a href="<?= $href ?>" class="nl"<?= $key && $key === $active ? ' aria-current="page"' : '' ?>><?= $label ?></a>
       <?php endforeach; ?>
     </nav>
     <div class="flex items-center gap-3">
       <a href="rooms.php#booking" class="rounded-full bg-sunset px-5 py-2.5 text-sm font-semibold text-lagoon hover:bg-bronze hover:text-white">Book a stay</a>
-      <button id="menuBtn" class="rounded-full p-2 lg:hidden" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+      <button id="menuBtn" class="rounded-full p-2 xl:hidden" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
     </div>
   </div>
-  <div id="mobileMenu" class="hidden bg-lagoon px-5 pb-6 pt-2 text-white lg:hidden">
+  <div id="mobileMenu" class="hidden bg-lagoon px-5 pb-6 pt-2 text-white xl:hidden">
     <?php foreach ($links as [$href,$label,$key]): ?>
       <a href="<?= $href ?>" class="block border-b border-white/10 py-3"><?= $label ?></a>
     <?php endforeach; ?>

@@ -10,7 +10,7 @@
   const dateForm = $('#dateForm'), dateMsg = $('#dateMsg');
   const guestForm = $('#guestForm'), guestMsg = $('#guestMsg');
   const params = new URLSearchParams(location.search);
-  const state = { q: null, nights: 0, rooms: [], room: null, preferred: params.get('room') };
+  const state = { q: null, nights: 0, rooms: [], room: null, preferred: params.get('room'), discount: null };
   const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
   function go(n, { scroll = true } = {}) {
@@ -79,6 +79,14 @@
     const room = state.rooms.find(x => x.id === id); if (!room) return;
     state.room = room;
     const { q, nights } = state;
+    state.discount = null; $('#codeMsg').textContent = ''; guestForm.code.value = '';
+    renderSummary();
+    go(3, opts);
+  }
+
+  function renderSummary() {
+    const { q, nights, room, discount } = state;
+    const total = room.total - (discount ? discount.amount : 0);
     $('#summary').innerHTML = `
       <h3 class="font-display text-xl">${esc(room.name)}</h3>
       <dl class="mt-4 space-y-2 text-sm">
@@ -86,11 +94,24 @@
         <div class="flex justify-between gap-4"><dt class="text-lagoon/60">Check-out</dt><dd class="font-medium">${fmt(q.checkout)}</dd></div>
         <div class="flex justify-between gap-4"><dt class="text-lagoon/60">Guests</dt><dd class="font-medium">${q.guests}</dd></div>
         <div class="flex justify-between gap-4"><dt class="text-lagoon/60">${peso(room.nightly)} x ${nights} ${nights === 1 ? 'night' : 'nights'}</dt><dd class="font-medium">${peso(room.total)}</dd></div>
+        ${discount ? `<div class="flex justify-between gap-4 text-emerald-700"><dt>Code ${esc(discount.code)}</dt><dd class="font-medium">-${peso(discount.amount)}</dd></div>` : ''}
       </dl>
-      <p class="mt-5 flex items-baseline justify-between border-t border-lagoon/15 pt-4"><span>Estimated total</span><strong class="font-display text-2xl">${peso(room.total)}</strong></p>
+      <p class="mt-5 flex items-baseline justify-between border-t border-lagoon/15 pt-4"><span>Estimated total</span><strong class="font-display text-2xl">${peso(total)}</strong></p>
       <p class="mt-3 text-xs text-lagoon/60">Final rates are confirmed by the reservations team. No payment is taken now.</p>`;
-    go(3, opts);
   }
+
+  $('#applyCode').addEventListener('click', async () => {
+    const msg = $('#codeMsg'), code = guestForm.code.value.trim();
+    msg.className = 'mt-1 min-h-5 text-sm';
+    if (!code) { state.discount = null; renderSummary(); msg.textContent = ''; return; }
+    msg.textContent = 'Checking…';
+    try {
+      const r = await api('discount.php', { ...state.q, room: state.room.id, code });
+      if (r.ok) { state.discount = { code: r.code, amount: r.amount }; msg.classList.add('text-emerald-700'); msg.textContent = `Code applied. You save ${peso(r.amount)}.`; }
+      else { state.discount = null; msg.classList.add('text-red-700'); msg.textContent = r.error || 'That code could not be applied.'; }
+    } catch { msg.classList.add('text-red-700'); msg.textContent = 'Connection problem. Try again.'; }
+    renderSummary();
+  });
 
   // Events
   dateForm.addEventListener('submit', async e => {
@@ -115,13 +136,41 @@
     guestMsg.textContent = 'Sending…';
     const btn = guestForm.querySelector('button'); btn.disabled = true;
     try {
-      const r = await api('booking.php', { ...state.q, room: state.room.id, ...Object.fromEntries(new FormData(guestForm)) });
-      if (r.ok) { $('#refCode').textContent = r.ref; guestMsg.textContent = ''; guestForm.reset(); go(4); return; }
+      const r = await api('booking.php', { ...state.q, room: state.room.id, ...Object.fromEntries(new FormData(guestForm)), code: state.discount ? state.discount.code : '' });
+      if (r.ok) { $('#refCode').textContent = r.ref; $('#receiptLink').href = r.receipt; $('#payLink').href = r.pay; state.summary = r.summary; $('#imagePreview').classList.add('hidden'); guestMsg.textContent = ''; guestForm.reset(); go(4); loadCrypto(r.ref); return; }
       if (r.unavailable) { guestMsg.textContent = r.error; if (await search(state.q)) go(2); return; }
       for (const [k, m] of Object.entries(r.errors || {})) { const p = guestForm.querySelector(`.err[data-for="${k}"]`); if (p) p.textContent = m; }
       guestMsg.textContent = r.errors ? 'Fix the highlighted fields and send again.' : (r.error || 'Could not send. Try again.');
     } catch { guestMsg.textContent = 'Connection problem. Your request was not sent.'; }
     finally { btn.disabled = false; }
+  });
+
+  $('#receiptImage').addEventListener('click', async e => {
+    const btn = e.currentTarget; if (!state.summary || !window.CLReceipt) return;
+    btn.disabled = true; const label = btn.textContent; btn.textContent = 'Preparing image…';
+    try {
+      const blob = await CLReceipt.render(state.summary, window.SITE);
+      const url = URL.createObjectURL(blob);
+      $('#receiptPreview').src = url; $('#imagePreview').classList.remove('hidden');
+      const a = document.createElement('a'); a.href = url; a.download = `receipt-${state.summary.ref}.png`; document.body.append(a); a.click(); a.remove();
+    } catch { alert('The image could not be created. Please use the PDF receipt instead.'); }
+    btn.disabled = false; btn.textContent = label;
+  });
+
+  async function loadCrypto(ref) {
+    try {
+      const r = await api('crypto.php'); if (!r.ok || !r.wallets.length) return;
+      $('#cryptoRef').textContent = ref;
+      $('#cryptoList').innerHTML = r.wallets.map(w => `<li class="rounded-xl bg-white p-4">
+        <p class="text-sm font-semibold">${esc(w.coin)} on ${esc(w.network)}${w.label ? ` <span class="font-normal text-lagoon/60">· ${esc(w.label)}</span>` : ''}</p>
+        <div class="mt-2 flex items-start justify-between gap-3"><code class="break-all text-xs">${esc(w.address)}</code>
+        <button type="button" data-copy="${esc(w.address)}" class="shrink-0 rounded-lg border border-lagoon/20 px-3 py-1 text-xs font-semibold hover:bg-lagoon hover:text-white">Copy</button></div></li>`).join('');
+      $('#cryptoBox').classList.remove('hidden');
+    } catch { /* crypto details are optional */ }
+  }
+  document.addEventListener('click', async e => {
+    const c = e.target.closest('[data-copy]'); if (!c) return;
+    try { await navigator.clipboard.writeText(c.dataset.copy); c.textContent = 'Copied'; setTimeout(() => c.textContent = 'Copy', 1500); } catch { c.textContent = 'Select and copy'; }
   });
 
   // Arriving from the home page with dates (and maybe a room) in the URL

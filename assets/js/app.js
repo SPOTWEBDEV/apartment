@@ -106,6 +106,9 @@
   const form = $('#inquiryForm');
   if (form) {
     const formMsg = $('#formMsg');
+    const typeSel = $('#type'), extra = $('#extraFields'), timeWrap = $('#timeWrap');
+    const syncType = () => { extra.classList.toggle('hidden', !['table', 'wedding', 'corporate'].includes(typeSel.value)); timeWrap.classList.toggle('hidden', typeSel.value !== 'table'); };
+    typeSel.addEventListener('change', syncType); syncType();
     form.addEventListener('submit', async e => {
       e.preventDefault();
       form.querySelectorAll('.err').forEach(p => p.textContent = '');
