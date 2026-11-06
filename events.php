@@ -40,7 +40,7 @@ include __DIR__ . '/includes/header.php';
   <div class="mx-auto max-w-5xl px-5">
     <h2 data-reveal class="font-display text-4xl sm:text-5xl">How planning works</h2>
     <ol class="mt-10 grid gap-8 md:grid-cols-3">
-      <?php foreach ([['Tell us the date and group size','Use the form below, or message us on WhatsApp.'],['We reply with options and a quote','Usually within a day, by email.'],['Visit if you like, then confirm','See the grounds first, then lock in your date.']] as $n => [$t,$d]): ?>
+      <?php foreach ([['Tell us the date and group size','Use the form below, or message us on Messenger.'],['We reply with options and a quote','Usually within a day, by email.'],['Visit if you like, then confirm','See the grounds first, then lock in your date.']] as $n => [$t,$d]): ?>
       <li data-reveal class="rounded-2xl bg-white p-6"><span class="font-display text-3xl text-bronze"><?= $n + 1 ?></span><h3 class="mt-3 font-display text-xl"><?= $t ?></h3><p class="mt-1 text-lagoon/70"><?= $d ?></p></li>
       <?php endforeach; ?>
     </ol>
@@ -51,9 +51,9 @@ include __DIR__ . '/includes/header.php';
   <div data-reveal class="lg:col-span-2">
     <h2 class="font-display text-4xl sm:text-5xl">Send an inquiry</h2>
     <p class="mt-4 max-w-md text-lg text-lagoon/80">Share the date, the size of your group and what you have in mind.</p>
-    <p class="mt-6 text-lagoon/80">Prefer to talk? <a class="font-semibold text-bronze underline underline-offset-4" href="<?= e(whatsapp_url('Hello, I would like to ask about an event.')) ?>" rel="noopener">Message us on WhatsApp</a> or call <a class="underline" href="tel:<?= e(cfg('phone_tel')) ?>"><?= e(cfg('phone')) ?></a>.</p>
+    <p class="mt-6 text-lagoon/80">Prefer to talk? <?php if (messenger_url()): ?><a class="font-semibold text-bronze underline underline-offset-4" href="<?= e(messenger_url()) ?>" rel="noopener">Message us on Messenger</a> or <?php endif; ?>call <a class="underline" href="tel:<?= e(cfg('phone_tel')) ?>"><?= e(cfg('phone')) ?></a>.</p>
   </div>
-  <?php $form_class = 'lg:col-span-3'; $event_fields = true; $msg = ''; include __DIR__ . '/includes/inquiry-form.php'; ?>
+  <?php $form_class = 'lg:col-span-3'; $msg = ''; include __DIR__ . '/includes/inquiry-form.php'; ?>
 </section>
 </main>
 <?php include __DIR__ . '/includes/footer.php'; ?>

@@ -17,7 +17,7 @@
   }
 
   function form(d) {
-    const x = d || { code: '', label: '', type: 'percent', value: 10, min_nights: 0, starts: '', ends: '', max_uses: 0, active: 1 };
+    const x = d || { code: '', label: '', type: 'percent', value: '', min_nights: 0, starts: '', ends: '', max_uses: 0, active: 1 };
     const f = document.createElement('form'); f.className = 'space-y-4'; f.noValidate = true;
     f.innerHTML = `<input type="hidden" name="id" value="${d ? d.id : 0}">
       <div class="grid grid-cols-2 gap-3"><div><label class="lbl">Code</label><input class="input uppercase" name="code" value="${esc(x.code)}" placeholder="SUMMER15"></div><div><label class="lbl">Label (internal)</label><input class="input" name="label" value="${esc(x.label)}"></div></div>

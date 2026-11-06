@@ -18,7 +18,7 @@ function settings_all(): array {
 }
 (function () {
   $o = settings_all(); $c = &$GLOBALS['CFG'];
-  foreach (['site_name','tagline','email','phone','phone_tel','whatsapp','check_in','check_out','currency','max_nights'] as $k)
+  foreach (['site_name','tagline','email','phone','phone_tel','messenger','payment_instructions','check_in','check_out','currency','max_nights'] as $k)
     if (isset($o[$k]) && $o[$k] !== '') $c[$k] = $o[$k];
   if (!empty($o['address'])) $c['address'] = array_values(array_filter(array_map('trim', explode("\n", $o['address']))));
   foreach (['facebook','instagram'] as $k) if (isset($o[$k]) && $o[$k] !== '') $c['social'][$k] = $o[$k];
@@ -28,7 +28,7 @@ function settings_all(): array {
 function rooms_all(bool $activeOnly = true): array {
   try {
     $rows = db()->query('SELECT * FROM rooms' . ($activeOnly ? ' WHERE active=1' : '') . ' ORDER BY featured DESC, created_at, id')->fetchAll();
-  } catch (Throwable $e) { $d = require __DIR__ . '/data.php'; return $d['rooms']; }
+  } catch (Throwable $e) { return []; }
   $gal = [];
   try { foreach (db()->query('SELECT room_id, file, caption FROM room_images ORDER BY sort, id') as $i) $gal[$i['room_id']][] = ['file' => $i['file'], 'caption' => $i['caption']]; } catch (Throwable $e) {}
   foreach ($rows as &$r) {
@@ -51,8 +51,20 @@ function cfg(string $key, $default = null) {
 }
 function e($s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 function peso($n): string { return cfg('currency', '₱') . number_format((float)$n); }
-function whatsapp_url(string $text = ''): string {
-  return 'https://wa.me/' . preg_replace('/\D/', '', (string)cfg('whatsapp')) . ($text !== '' ? '?text=' . rawurlencode($text) : '');
+/** Accepts a page name, an m.me / facebook.com link or a numeric page id and returns just the handle ('' if invalid). */
+function messenger_handle(string $v): string {
+  $v = trim($v);
+  if ($v === '') return '';
+  if (preg_match('/profile\.php\?id=(\d+)/', $v, $m)) return $m[1];
+  $v = (string)preg_replace('#^https?://#i', '', $v);
+  $v = (string)preg_replace('#^(www\.|m\.)?(m\.me|facebook\.com|fb\.com|fb\.me|messenger\.com/t)/#i', '', $v);
+  $v = trim(explode('?', explode('#', $v)[0])[0], '/ ');
+  return preg_match('/^[A-Za-z0-9.\-_]{3,100}$/', $v) ? $v : '';
+}
+/** Link that opens a Messenger chat with the business page ('' until set in Admin > Settings). */
+function messenger_url(): string {
+  $h = messenger_handle((string)cfg('messenger', ''));
+  return $h === '' ? '' : 'https://m.me/' . rawurlencode($h);
 }
 function maps_url(): string {
   return 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode(cfg('site_name') . ', ' . implode(', ', cfg('address', [])));

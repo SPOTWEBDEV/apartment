@@ -40,11 +40,16 @@
     $('#kpis').innerHTML =
       card('Revenue this month', money(k.revenue), delta(k.revenue, k.revenue_prev)) +
       card('New bookings', k.bookings, delta(k.bookings, k.bookings_prev)) +
-      card('Occupancy, next 30 nights', k.occupancy + '%', `<span class="text-slate-400">Booked nights vs capacity</span>`) +
+      card('Occupancy, next 30 nights', k.occupancy === null ? '—' : k.occupancy + '%', `<span class="text-slate-400">${k.occupancy === null ? 'Add rooms to see occupancy' : 'Booked nights vs capacity'}</span>`) +
       card('Outstanding balance', money(k.outstanding), `<a class="font-medium text-bronze hover:underline" href="payments.php">${k.pending} pending ${k.pending === 1 ? 'request' : 'requests'}</a>`);
 
+    const todo = [[k.pending, 'booking request', 'bookings.php?status=pending'], [k.pending_payments, 'payment to review', 'payments.php?status=pending'], [k.new_messages, 'new message', 'inquiries.php']].filter(x => x[0] > 0);
+    const att = $('#attention');
+    att.classList.toggle('hidden', !todo.length); att.classList.toggle('flex', !!todo.length);
+    att.innerHTML = todo.length ? '<strong>Needs your attention:</strong>' + todo.map(([n, l, href]) => `<a href="${href}" class="rounded-full bg-white px-3 py-1 font-semibold text-lagoon ring-1 ring-amber-300 hover:bg-amber-100">${n} ${l}${n === 1 ? '' : 's'}</a>`).join('') : '';
     $('#revTotal').textContent = money(r.series.reduce((t, d) => t + d.revenue, 0));
-    chart($('#chart'), r.series);
+    if (r.series.some(d => d.revenue > 0)) chart($('#chart'), r.series);
+    else $('#chart').innerHTML = '<p class="grid h-56 place-items-center rounded-xl bg-slate-50 text-sm text-slate-400">No payments received in the last 30 days.</p>';
 
     const S = { pending: ['Pending', '#F59E0B'], confirmed: ['Confirmed', '#0EA5E9'], checked_in: ['Checked in', '#14B8A6'], completed: ['Completed', '#10B981'], cancelled: ['Cancelled', '#94A3B8'] };
     const total = Object.values(r.status).reduce((a, b) => a + +b, 0);
