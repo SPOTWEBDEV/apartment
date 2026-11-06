@@ -1,0 +1,13 @@
+# Apache: keep private files and folders away from the browser. (Nginx users: see README.md)
+Options -Indexes
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^(includes|tools|storage)(/|$) - [F,L]
+  RewriteRule (^|/)\.(env|git) - [F,L]
+</IfModule>
+<FilesMatch "\.(sqlite|sqlite-wal|sqlite-shm|jsonl|md|example)$">
+  Require all denied
+</FilesMatch>
+
+# Friendly 404 page. Uncomment and adjust the path if the site is in the web root (use /sub-folder/404.php otherwise):
+# ErrorDocument 404 /404.php

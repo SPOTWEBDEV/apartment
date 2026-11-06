@@ -15,6 +15,8 @@ return [
   'check_in'   => '2:00 PM',                     // PLACEHOLDER: confirm with the resort
   'check_out'  => '12:00 PM',                    // PLACEHOLDER: confirm with the resort
   'dining_hours' => ['Breakfast'=>'7:00 AM to 10:00 AM','Lunch'=>'11:00 AM to 3:00 PM','Dinner at La Mensa'=>'5:30 PM to 9:30 PM'], // PLACEHOLDERS: confirm
+  'site_url'   => (string)env('APP_URL', ''),     // set APP_URL in .env (used for links in emails)
+  'max_room_images' => 10,                       // photos allowed per room gallery
   'currency'   => '₱',
   'social'     => ['facebook' => '#', 'instagram' => '#'],
 ];

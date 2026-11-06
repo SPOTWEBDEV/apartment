@@ -6,7 +6,7 @@ return [
   'rooms' => [
     ['id'=>'casita3','name'=>'Three-bedroom Casita','blurb'=>'Two-storey beachfront house with a living area and a roof terrace, built for the whole family.','guests'=>8,'units'=>2,'price'=>18500,'img'=>'casita.jpg','featured'=>true,'beds'=>'3 bedrooms','amenities'=>['Roof terrace','Living and dining area','Beachfront views','Welcome drink on arrival']],
     ['id'=>'poolside','name'=>'Poolside Villa','blurb'=>'Quiet, shaded and a few steps from the pool.','guests'=>4,'units'=>4,'price'=>9800,'img'=>'pool.jpg','beds'=>'2 bedrooms','amenities'=>['Steps from the pool','Shaded terrace','Large windows','Welcome drink on arrival']],
-    ['id'=>'seaview','name'=>'Seaview Room','blurb'=>'Balcony facing the cove, made for sunrise coffee.','guests'=>2,'units'=>6,'price'=>6900,'img'=>'room-seaview.webp','beds'=>'1 bedroom','amenities'=>['Balcony facing the cove','Sunrise views','Quiet corner','Welcome drink on arrival']],
+    ['id'=>'seaview','name'=>'Seaview Room','blurb'=>'Balcony facing the cove, made for sunrise coffee.','guests'=>2,'units'=>6,'price'=>6900,'img'=>'room-seaview.jpg','beds'=>'1 bedroom','amenities'=>['Balcony facing the cove','Sunrise views','Quiet corner','Welcome drink on arrival']],
   ],
   'experiences' => [
     ['Balsa raft','Free for guests. Best at sunset.','hero-raft.jpg'],

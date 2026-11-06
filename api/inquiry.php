@@ -22,5 +22,5 @@ $record = ['at'=>date('c'),'name'=>$name,'email'=>$email,'type'=>$type,'event_da
 file_put_contents(__DIR__ . '/../storage/inquiries.jsonl', json_encode($record, JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND | LOCK_EX);
 
 $extra = ($event_date ? "Date: $event_date\n" : '') . ($guests ? "Guests: $guests\n" : '');
-@mail(cfg('email'), "New $type inquiry from $name", "From: $name <$email>\n$extra\n$message", "Reply-To: $email");
+send_mail(cfg('email'), "New $type inquiry from $name", "From: $name <$email>\n$extra\n$message", $email);
 respond(['ok'=>true]);

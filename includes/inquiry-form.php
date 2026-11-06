@@ -19,5 +19,6 @@
   <div><label class="mb-1 block text-sm font-medium" for="message">Message</label><textarea class="field" id="message" name="message" rows="5"><?= e($msg ?? '') ?></textarea><p class="err mt-1 text-sm text-red-700" data-for="message"></p></div>
   <input type="text" name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
   <button class="w-full rounded-full bg-bronze px-7 py-3.5 font-semibold text-white hover:bg-lagoon disabled:opacity-60">Send inquiry</button>
+  <p class="text-xs text-lagoon/60">By sending this you agree to our <a class="underline" href="privacy.php">Privacy Policy</a>.</p>
   <p id="formMsg" class="min-h-6 text-sm" role="status" aria-live="polite"></p>
 </form>

@@ -8,7 +8,7 @@ include __DIR__ . '/includes/header.php';
 
 <!-- Hero -->
 <section data-hero class="relative flex min-h-[100svh] items-end overflow-hidden bg-lagoon text-white">
-  <img data-hero-img src="assets/img/hero.jpg" alt="Balsa raft on the cove at sunset" class="absolute inset-0 h-full w-full object-cover" fetchpriority="high">
+  <img data-hero-img src="assets/img/hero-raft.jpg" alt="Balsa raft on the cove at sunset" class="absolute inset-0 h-full w-full object-cover" fetchpriority="high">
   <div class="absolute inset-0 bg-gradient-to-b from-lagoon/60 via-lagoon/10 to-lagoon/90"></div>
   <div class="relative mx-auto w-full max-w-7xl px-5 pb-10 pt-40 lg:px-8 lg:pb-14">
     <h1 data-hero-title class="max-w-3xl font-display text-5xl leading-[1.05] sm:text-6xl lg:text-7xl">A quiet cove, two and a half hours from Manila.</h1>
@@ -58,18 +58,21 @@ include __DIR__ . '/includes/header.php';
 <section id="rooms" class="mx-auto max-w-7xl px-5 pb-24 lg:px-8">
   <div class="flex flex-wrap items-end justify-between gap-4">
     <h2 class="max-w-xl font-display text-4xl sm:text-5xl">Where you will stay</h2>
-    <a href="#book" class="font-medium text-bronze underline underline-offset-4 hover:text-lagoon">Check dates for any room</a>
+    <a href="rooms.php#booking" class="font-medium text-bronze underline underline-offset-4 hover:text-lagoon">See all rooms and book</a>
   </div>
   <div class="mt-10 grid gap-6 lg:grid-cols-5">
-    <?php foreach ($data['rooms'] as $r): $feat = !empty($r['featured']); ?>
+    <?php foreach (rooms_all(true) as $r): $feat = !empty($r['featured']); ?>
     <article data-reveal class="overflow-hidden rounded-3xl bg-white shadow-sm <?= $feat ? 'lg:col-span-3 lg:row-span-2' : 'lg:col-span-2' ?>">
-      <div class="ph <?= $feat ? 'aspect-[4/3] lg:aspect-auto lg:h-[26rem]' : 'aspect-[16/9]' ?> bg-cover bg-center" style="background-image:url('assets/img/<?= e($r['img']) ?>'),linear-gradient(135deg,#14405F,#2E6C8A 55%,#F2A65A)" role="img" aria-label="<?= e($r['name']) ?>"></div>
+      <div class="ph <?= $feat ? 'aspect-[4/3] lg:aspect-auto lg:h-[26rem]' : 'aspect-[16/9]' ?> relative bg-cover bg-center" style="background-image:url('assets/img/<?= e($r['img']) ?>'),linear-gradient(135deg,#14405F,#2E6C8A 55%,#F2A65A)" role="img" aria-label="<?= e($r['name']) ?>">
+        <?php if (count($r['images'] ?? []) > 1): ?><a href="rooms.php#<?= e($r['id']) ?>" class="absolute bottom-3 left-3 rounded-full bg-lagoon/75 px-3 py-1 text-xs font-semibold text-white backdrop-blur hover:bg-lagoon"><?= count($r['images']) ?> photos</a><?php endif; ?>
+      </div>
       <div class="p-6">
         <div class="flex items-baseline justify-between gap-4">
           <h3 class="font-display text-2xl"><?= e($r['name']) ?></h3>
           <p class="whitespace-nowrap text-sm text-lagoon/70">from <strong class="text-lagoon"><?= peso($r['price']) ?></strong> a night</p>
         </div>
         <p class="mt-2 text-lagoon/75"><?= e($r['blurb']) ?> Sleeps up to <?= (int)$r['guests'] ?>.</p>
+        <a href="rooms.php?room=<?= e($r['id']) ?>#booking" class="mt-4 inline-block font-semibold text-bronze underline underline-offset-4 hover:text-lagoon">View room and book</a>
       </div>
     </article>
     <?php endforeach; ?>
@@ -81,6 +84,7 @@ include __DIR__ . '/includes/header.php';
   <div data-reveal class="mx-auto max-w-7xl px-5 lg:px-8">
     <h2 class="max-w-2xl font-display text-4xl sm:text-5xl">Days that start on the water</h2>
     <p class="mt-4 max-w-xl text-white/75">Most activities are a few steps from your door. Ask the front desk to book boat tours the day before.</p>
+    <a href="experience.php" class="mt-5 inline-block font-semibold text-sunset underline underline-offset-4 hover:text-white">See all activities</a>
   </div>
   <ul class="mx-auto mt-10 flex max-w-7xl snap-x gap-5 overflow-x-auto px-5 pb-4 lg:px-8" tabindex="0" aria-label="Activities">
     <?php foreach ($data['experiences'] as [$t,$d,$img]): ?>
@@ -99,7 +103,7 @@ include __DIR__ . '/includes/header.php';
   <div data-reveal>
     <h2 class="font-display text-4xl sm:text-5xl">Filipino breakfasts, Italian dinners, seafood on the beach</h2>
     <p class="mt-5 max-w-lg text-lg text-lagoon/80">Start with Filipino breakfast, then settle in at La Mensa for pizza, pasta and wine. For groups, the seafood boodle fight is the one to book.</p>
-    <a href="contact.php?type=other" class="mt-8 inline-block rounded-full bg-lagoon px-7 py-3 font-semibold text-white hover:bg-tide">Reserve a table</a>
+    <div class="mt-8 flex flex-wrap gap-3"><a href="dining.php" class="rounded-full bg-lagoon px-7 py-3 font-semibold text-white hover:bg-tide">See dining</a><a href="contact.php?type=other&topic=table" class="rounded-full border border-lagoon/25 px-7 py-3 font-semibold hover:bg-lagoon hover:text-white">Reserve a table</a></div>
   </div>
 </section>
 
@@ -110,7 +114,7 @@ include __DIR__ . '/includes/header.php';
     <article data-reveal class="rounded-3xl bg-foam p-8 lg:p-10">
       <h3 class="font-display text-3xl"><?= $t ?></h3>
       <p class="mt-3 max-w-md text-lagoon/80"><?= $d ?></p>
-      <a href="contact.php?type=<?= $k ?>" class="mt-6 inline-block font-semibold text-bronze underline underline-offset-4 hover:text-lagoon">Ask about <?= strtolower($t) ?></a>
+      <a href="events.php?type=<?= $k ?>#inquire" class="mt-6 inline-block font-semibold text-bronze underline underline-offset-4 hover:text-lagoon">Ask about <?= strtolower($t) ?></a>
     </article>
     <?php endforeach; ?>
   </div>
@@ -120,7 +124,7 @@ include __DIR__ . '/includes/header.php';
 <section id="reviews" class="bg-foam py-20">
   <div class="mx-auto max-w-7xl px-5 lg:px-8">
     <div class="flex flex-wrap items-end justify-between gap-4">
-      <h2 data-reveal class="font-display text-4xl sm:text-5xl">What guests say</h2>
+      <div data-reveal><h2 class="font-display text-4xl sm:text-5xl">What guests say</h2><p id="revAvg" class="mt-2 text-lagoon/70" aria-live="polite"></p></div>
       <div class="flex gap-2">
         <button id="revPrev" class="rounded-full border border-lagoon/25 p-3 hover:bg-lagoon hover:text-white" aria-label="Previous reviews"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4 6 10l6 6"/></svg></button>
         <button id="revNext" class="rounded-full border border-lagoon/25 p-3 hover:bg-lagoon hover:text-white" aria-label="Next reviews"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 4 6 6-6 6"/></svg></button>
