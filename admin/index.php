@@ -6,6 +6,7 @@ admin_open('Dashboard', 'dashboard', 'How the resort is doing this month.', '<a 
   <p>You are still using the default password. Change it before sharing this admin with anyone.</p>
   <a href="settings.php#account" class="btn-ghost btn-sm shrink-0">Change password</a>
 </div>
+<div id="attention" class="mb-6 hidden flex-wrap items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900" role="status"></div>
 <section id="kpis" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Key numbers">
   <?php for ($i = 0; $i < 4; $i++): ?><div class="card skel h-32"></div><?php endfor; ?>
 </section>

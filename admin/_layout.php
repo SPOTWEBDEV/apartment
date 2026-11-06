@@ -11,6 +11,7 @@ function icon(string $n, string $c = 'h-5 w-5'): string {
     'payments'  => '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
     'discounts' => '<path d="M19 5 5 19"/><circle cx="7" cy="7" r="2"/><circle cx="17" cy="17" r="2"/>',
     'settings'  => '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+    'mail'      => '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
     'menu'      => '<path d="M4 7h16M4 12h16M4 17h16"/>',
     'external'  => '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
     'logout'    => '<path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M16 8l4 4-4 4M20 12H9"/>',
@@ -21,8 +22,14 @@ function icon(string $n, string $c = 'h-5 w-5'): string {
 /** Prints the page shell up to the start of the content area. */
 function admin_open(string $title, string $active, string $sub = '', string $actions = ''): void {
   $u = require_admin();
-  $pending = 0; try { $pending = (int)db()->query("SELECT COUNT(*) FROM bookings WHERE status='pending'")->fetchColumn(); } catch (Throwable $e) {}
-  $nav = [['index.php','Dashboard','dashboard'],['bookings.php','Bookings','bookings'],['calendar.php','Calendar','calendar'],['rooms.php','Rooms','rooms'],['payments.php','Payments','payments'],['discounts.php','Discounts','discounts'],['settings.php','Settings','settings']];
+  $badge = ['bookings' => 0, 'payments' => 0, 'inquiries' => 0];
+  try {
+    $badge['bookings'] = (int)db()->query("SELECT COUNT(*) FROM bookings WHERE status='pending'")->fetchColumn();
+    $badge['payments'] = (int)db()->query("SELECT COUNT(*) FROM payments WHERE status='pending'")->fetchColumn();
+    $badge['inquiries'] = (int)db()->query("SELECT COUNT(*) FROM inquiries WHERE status='new'")->fetchColumn();
+  } catch (Throwable $e) {}
+  $nav = [['index.php','Dashboard','dashboard'],['bookings.php','Bookings','bookings'],['calendar.php','Calendar','calendar'],['rooms.php','Rooms','rooms'],
+          [$badge['payments'] ? 'payments.php?status=pending' : 'payments.php','Payments','payments'],['inquiries.php','Messages','inquiries'],['discounts.php','Discounts','discounts'],['settings.php','Settings','settings']];
   $initial = strtoupper(mb_substr($u['name'] ?: $u['email'], 0, 1));
   ?>
 <!doctype html>
@@ -60,8 +67,8 @@ function admin_open(string $title, string $active, string $sub = '', string $act
   <p class="mt-1 px-2 text-xs text-white/50">Admin</p>
   <nav class="mt-8 space-y-1" aria-label="Admin">
     <?php foreach ($nav as [$href,$label,$key]): ?>
-      <a href="<?= $href ?>" class="navlink"<?= $key === $active ? ' aria-current="page"' : '' ?>><?= icon($key) ?><span class="flex-1"><?= $label ?></span>
-        <?php if ($key === 'bookings' && $pending): ?><span class="rounded-full bg-sunset px-2 py-0.5 text-xs font-bold text-lagoon"><?= $pending ?></span><?php endif; ?></a>
+      <a href="<?= $href ?>" class="navlink"<?= $key === $active ? ' aria-current="page"' : '' ?>><?= icon($key === 'inquiries' ? 'mail' : $key) ?><span class="flex-1"><?= $label ?></span>
+        <?php if (!empty($badge[$key])): ?><span class="rounded-full bg-sunset px-2 py-0.5 text-xs font-bold text-lagoon"><?= $badge[$key] ?></span><?php endif; ?></a>
     <?php endforeach; ?>
   </nav>
   <div class="mt-auto space-y-1">

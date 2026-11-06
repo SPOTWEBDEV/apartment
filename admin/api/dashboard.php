@@ -25,7 +25,8 @@ $def = (bool)val('SELECT initial_pw FROM users WHERE id=?', [admin_user()['id']]
 
 respond(['ok'=>true,
   'kpi'=>['revenue'=>$rev($ms, $nms), 'revenue_prev'=>$rev($pms, $ms), 'bookings'=>$cnt($ms, $nms), 'bookings_prev'=>$cnt($pms, $ms),
-          'occupancy'=>$cap ? (int)round(100 * $used / $cap) : 0, 'outstanding'=>$outstanding, 'pending'=>(int)($status['pending'] ?? 0)],
+          'occupancy'=>$cap ? (int)round(100 * $used / $cap) : null, 'outstanding'=>$outstanding, 'pending'=>(int)($status['pending'] ?? 0),
+          'pending_payments'=>(int)val("SELECT COUNT(*) FROM payments WHERE status='pending'"), 'new_messages'=>(int)val("SELECT COUNT(*) FROM inquiries WHERE status='new'")],
   'series'=>$series, 'status'=>$status, 'default_password'=>$def,
   'pending'=>rows("SELECT id, ref, name, room_name, checkin, checkout, total FROM bookings WHERE status='pending' ORDER BY id DESC LIMIT 5"),
   'arrivals'=>rows("SELECT id, ref, name, room_name, checkin, nights, guests, status FROM bookings WHERE status IN ('pending','confirmed') AND checkin>=? AND checkin<=? ORDER BY checkin LIMIT 6", [$today, date('Y-m-d', strtotime('+7 days'))]),

@@ -21,7 +21,7 @@ $code = strtoupper(clean($in['code'] ?? '', 30));
 $errors = [];
 if ($name === '') $errors['name'] = 'Enter your name.';
 if (!$email) $errors['email'] = 'Enter a valid email address.';
-if ($phone === '') $errors['phone'] = 'Enter a phone or WhatsApp number so we can reach you.';
+if ($phone === '') $errors['phone'] = 'Enter a phone number so we can reach you.';
 if ($errors) respond(['ok'=>false,'errors'=>$errors], 422);
 
 $res = booking_create($room, $q, ['name'=>$name,'email'=>$email,'phone'=>$phone,'notes'=>$notes], $code);
@@ -35,9 +35,9 @@ $summary = "Reference: {$b['ref']}\nRoom: {$b['room_name']}\nCheck-in: {$b['chec
   . ($b['discount_code'] ? "Discount {$b['discount_code']}: -" . peso($b['discount_amount']) . "\n" : '') . 'Estimated total: ' . peso($b['total']);
 
 send_mail(cfg('email'), "New booking request {$b['ref']}", "$summary\n\nGuest: $name\nEmail: $email\nPhone: $phone\nNotes: $notes", $email);
-send_mail($email, 'We received your booking request (' . $b['ref'] . ')', "Hello $name,\n\nThank you for choosing " . cfg('site_name') . ". This is a request, not a confirmed booking. Our reservations team will confirm by email or WhatsApp.\n\n$summary\n\nDownload your receipt (PDF): " . base_url(2) . '/' . receipt_path($b) . "\n\n" . cfg('site_name'), cfg('email'));
+send_mail($email, 'We received your booking request (' . $b['ref'] . ')', "Hello $name,\n\nThank you for choosing " . cfg('site_name') . ". This is a request, not a confirmed booking. Our reservations team will confirm by email or phone.\n\n$summary\n\nDownload your receipt (PDF): " . base_url(2) . '/' . receipt_path($b) . "\n\nSend your payment details here once you have paid: " . base_url(2) . '/' . pay_path($b) . "\n\n" . cfg('site_name'), cfg('email'));
 
-respond(['ok'=>true,'ref'=>$b['ref'],'total'=>$b['total'],'receipt'=>receipt_path($b),'summary'=>[
+respond(['ok'=>true,'ref'=>$b['ref'],'total'=>$b['total'],'receipt'=>receipt_path($b),'pay'=>pay_path($b),'summary'=>[
   'ref'=>$b['ref'],'name'=>$b['name'],'email'=>$b['email'],'phone'=>$b['phone'],'room'=>$b['room_name'],'checkin'=>$b['checkin'],'checkout'=>$b['checkout'],
   'nights'=>(int)$b['nights'],'guests'=>(int)$b['guests'],'subtotal'=>(int)$b['subtotal'],'discount_code'=>$b['discount_code'],'discount_amount'=>(int)$b['discount_amount'],
   'total'=>(int)$b['total'],'paid'=>0,'balance'=>(int)$b['total'],'status_label'=>'Pending confirmation']]);

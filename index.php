@@ -2,6 +2,7 @@
 require __DIR__ . '/includes/bootstrap.php';
 $data = require __DIR__ . '/includes/data.php';
 $solid = false; $active = 'home';
+$hasRooms = (bool)rooms_all(true);
 include __DIR__ . '/includes/header.php';
 ?>
 <main id="top">
@@ -14,6 +15,7 @@ include __DIR__ . '/includes/header.php';
     <h1 data-hero-title class="max-w-3xl font-display text-5xl leading-[1.05] sm:text-6xl lg:text-7xl">A quiet cove, two and a half hours from Manila.</h1>
     <p data-hero-sub class="mt-5 max-w-xl text-lg text-white/85">Beachfront casitas, two pools and a balsa raft at sunset, in San Juan, Batangas. Bring the family, and the dog.</p>
 
+    <?php if ($hasRooms): ?>
     <form id="book" data-hero-form class="glass mt-10 grid gap-3 rounded-3xl p-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_.7fr_auto]" novalidate>
       <label class="block rounded-2xl bg-white/90 px-4 py-2.5 text-lagoon"><span class="block text-xs font-medium text-lagoon/70">Check-in</span>
         <input type="date" name="checkin" required class="w-full bg-transparent font-medium focus:outline-none"></label>
@@ -24,6 +26,9 @@ include __DIR__ . '/includes/header.php';
       <button class="rounded-2xl bg-sunset px-8 py-4 font-semibold text-lagoon transition hover:bg-white disabled:opacity-60 sm:col-span-2 lg:col-span-1">Check availability</button>
     </form>
     <p id="bookMsg" class="mt-3 min-h-6 text-sm text-white/90" role="status" aria-live="polite"></p>
+    <?php else: ?>
+    <a href="contact.php" class="rise mt-10 inline-block rounded-full bg-sunset px-8 py-4 font-semibold text-lagoon hover:bg-white">Contact reservations</a>
+    <?php endif; ?>
   </div>
 </section>
 
@@ -60,6 +65,7 @@ include __DIR__ . '/includes/header.php';
     <h2 class="max-w-xl font-display text-4xl sm:text-5xl">Where you will stay</h2>
     <a href="rooms.php#booking" class="font-medium text-bronze underline underline-offset-4 hover:text-lagoon">See all rooms and book</a>
   </div>
+  <?php if (!$hasRooms): ?><p class="mt-10 rounded-3xl bg-foam p-10 text-lagoon/80">Our rooms are being added. <a href="contact.php" class="font-semibold text-bronze underline underline-offset-4">Contact reservations</a> to book your stay.</p><?php else: ?>
   <div class="mt-10 grid gap-6 lg:grid-cols-5">
     <?php foreach (rooms_all(true) as $r): $feat = !empty($r['featured']); ?>
     <article data-reveal class="overflow-hidden rounded-3xl bg-white shadow-sm <?= $feat ? 'lg:col-span-3 lg:row-span-2' : 'lg:col-span-2' ?>">
@@ -77,6 +83,7 @@ include __DIR__ . '/includes/header.php';
     </article>
     <?php endforeach; ?>
   </div>
+  <?php endif; ?>
 </section>
 
 <!-- Experience rail -->
@@ -103,7 +110,7 @@ include __DIR__ . '/includes/header.php';
   <div data-reveal>
     <h2 class="font-display text-4xl sm:text-5xl">Filipino breakfasts, Italian dinners, seafood on the beach</h2>
     <p class="mt-5 max-w-lg text-lg text-lagoon/80">Start with Filipino breakfast, then settle in at La Mensa for pizza, pasta and wine. For groups, the seafood boodle fight is the one to book.</p>
-    <div class="mt-8 flex flex-wrap gap-3"><a href="dining.php" class="rounded-full bg-lagoon px-7 py-3 font-semibold text-white hover:bg-tide">See dining</a><a href="contact.php?type=other&topic=table" class="rounded-full border border-lagoon/25 px-7 py-3 font-semibold hover:bg-lagoon hover:text-white">Reserve a table</a></div>
+    <div class="mt-8 flex flex-wrap gap-3"><a href="dining.php" class="rounded-full bg-lagoon px-7 py-3 font-semibold text-white hover:bg-tide">See dining</a><a href="contact.php?type=table" class="rounded-full border border-lagoon/25 px-7 py-3 font-semibold hover:bg-lagoon hover:text-white">Reserve a table</a></div>
   </div>
 </section>
 
@@ -143,7 +150,7 @@ include __DIR__ . '/includes/header.php';
     <p class="mx-auto mt-4 max-w-lg text-white/75">Send us the dates and the size of your group. We reply by email, usually within a day.</p>
     <div class="mt-8 flex flex-wrap justify-center gap-3">
       <a href="contact.php" class="rounded-full bg-sunset px-7 py-3 font-semibold text-lagoon hover:bg-white">Contact reservations</a>
-      <a href="<?= e(whatsapp_url()) ?>" rel="noopener" class="rounded-full border border-white/30 px-7 py-3 font-semibold hover:bg-white hover:text-lagoon">Message on WhatsApp</a>
+      <?php if (messenger_url()): ?><a href="<?= e(messenger_url()) ?>" rel="noopener" class="rounded-full border border-white/30 px-7 py-3 font-semibold hover:bg-white hover:text-lagoon">Message on Messenger</a><?php endif; ?>
     </div>
   </div>
 </section>

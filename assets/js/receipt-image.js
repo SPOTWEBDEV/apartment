@@ -39,7 +39,7 @@ window.CLReceipt = (() => {
       t(x, y + 32, k, { size: 12, weight: 700, color: GRAY }); t(x, y + 62, v, { size: 19, weight: 700 }); });
 
     y += 134; t(PAD, y, 'STAY', { size: 13, weight: 700, color: BRONZE }); y += 10;
-    for (const [k, v] of [['Room', d.room], ['Check-in', fmtDate(d.checkin) + ' from ' + site.check_in], ['Check-out', fmtDate(d.checkout) + ' by ' + site.check_out], ['Nights', String(d.nights)], ['Guests', String(d.guests)]]) {
+    for (const [k, v] of [['Room', d.room], ['Check-in', fmtDate(d.checkin) + (site.check_in ? ' from ' + site.check_in : '')], ['Check-out', fmtDate(d.checkout) + (site.check_out ? ' by ' + site.check_out : '')], ['Nights', String(d.nights)], ['Guests', String(d.guests)]]) {
       y += 28; t(PAD, y, k, { size: 16, color: GRAY }); t(230, y, v, { size: 16, weight: 700 }); }
 
     y += 52; c.fillStyle = NAVY; c.beginPath(); c.roundRect(PAD, y, W - 2 * PAD, 42, 10); c.fill();
@@ -55,7 +55,7 @@ window.CLReceipt = (() => {
     y += 34; t(PAD, y, 'Balance due', { size: 19, weight: 700 }); t(W - PAD, y, money(d.balance), { size: 19, weight: 700, color: d.balance > 0 ? '#B91C1C' : NAVY, align: 'right' });
 
     y += 44; hr(y); y += 30;
-    y = wrap('Your booking request has been received. The reservations team confirms by email or WhatsApp, and your stay is not guaranteed until it is confirmed. This is a booking receipt and not an official tax invoice. Keep your reference and the emailed receipt link.', PAD, y, W - 2 * PAD, { size: 14, color: GRAY });
+    y = wrap('Your booking request has been received. The reservations team confirms by email or phone, and your stay is not guaranteed until it is confirmed. This is a booking receipt and not an official tax invoice. Keep your reference and the emailed receipt link.', PAD, y, W - 2 * PAD, { size: 14, color: GRAY });
     y += 10; t(W / 2, y + 6, `${site.name}  |  ${site.address.join(', ')}  |  ${site.email}`, { size: 13, color: GRAY, align: 'center' });
     const H = Math.ceil(y + 40);
 

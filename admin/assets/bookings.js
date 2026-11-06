@@ -1,6 +1,6 @@
 (() => {
   const { $, esc, money, dstr, iso, api, toast, drawer, badge, debounce, pager, payForm, methodLabel, confirm } = A;
-  const st = { status: 'all', q: '', page: 1 };
+  const st = { status: new URLSearchParams(location.search).get('status') || 'all', q: '', page: 1 };
   const TABS = [['all', 'All'], ['pending', 'Pending'], ['confirmed', 'Confirmed'], ['checked_in', 'Checked in'], ['completed', 'Completed'], ['cancelled', 'Cancelled']];
 
   async function load() {
@@ -34,7 +34,7 @@
       <h3 class="mt-6 text-sm font-semibold">Guest</h3><dl class="divide-y divide-slate-100">${kv('Name', esc(b.name))}${kv('Email', b.email ? `<a class="text-bronze hover:underline" href="mailto:${esc(b.email)}">${esc(b.email)}</a>` : '<span class="text-slate-400">None</span>')}${kv('Phone', b.phone ? `<a class="text-bronze hover:underline" href="tel:${esc(b.phone)}">${esc(b.phone)}</a>` : '<span class="text-slate-400">None</span>')}${b.notes ? kv('Guest notes', esc(b.notes)) : ''}</dl>
       <h3 class="mt-6 text-sm font-semibold">Pricing</h3><dl class="divide-y divide-slate-100">${kv('Subtotal', money(b.subtotal))}${b.discount_code ? kv('Discount ' + esc(b.discount_code), '-' + money(b.discount_amount)) : ''}${kv('Total', money(b.total))}${kv('Paid', money(b.paid))}${kv('Balance', `<strong>${money(b.balance)}</strong>`)}</dl>
       <h3 class="mt-6 text-sm font-semibold">Payments</h3>
-      <ul class="mt-2 divide-y divide-slate-100 text-sm">${r.payments.length ? r.payments.map(p => `<li class="flex justify-between py-2"><span>${esc(methodLabel(p.method, p))} · ${dstr(p.paid_at)}${p.reference ? ' · ' + esc(p.reference) : ''}</span><span class="${p.status === 'refunded' ? 'text-slate-400 line-through' : 'font-medium'}">${money(p.amount)}</span></li>`).join('') : '<li class="py-2 text-slate-400">No payments yet.</li>'}</ul>
+      <ul class="mt-2 divide-y divide-slate-100 text-sm">${r.payments.length ? r.payments.map(p => `<li class="flex items-center justify-between gap-3 py-2"><span>${esc(methodLabel(p.method, p))} · ${dstr(p.paid_at)}${p.reference ? ' · ' + esc(p.reference) : ''}${p.status === 'pending' ? ` <a class="font-semibold text-bronze hover:underline" href="payments.php?open=${p.id}">Review</a>` : ''}</span><span class="flex items-center gap-2">${p.status !== 'paid' ? badge('pay', p.status === 'refunded' ? 'refunded' : p.status) : ''}<span class="${['refunded', 'declined', 'pending'].includes(p.status) ? 'text-slate-400' : 'font-medium'} ${['refunded', 'declined'].includes(p.status) ? 'line-through' : ''}">${money(p.amount)}</span></span></li>`).join('') : '<li class="py-2 text-slate-400">No payments yet.</li>'}</ul>
       <div id="payHere" class="mt-4"></div>
       <h3 class="mt-6 text-sm font-semibold">Internal notes</h3>
       <textarea id="notes" rows="3" class="input mt-2" placeholder="Only visible to staff">${esc(b.admin_notes)}</textarea>
@@ -54,6 +54,7 @@
 
   async function newBooking() {
     const r = await api('bookings', 'rooms'); if (!r.ok) { toast(r.error, 'err'); return; }
+    if (!r.rooms.length) { drawer.open('New booking', '<p class="text-slate-600">There are no rooms yet. Add a room first, then you can create bookings.</p><a href="rooms.php" class="btn-primary mt-4">Add a room</a>'); return; }
     const f = document.createElement('form'); f.className = 'space-y-4'; f.noValidate = true;
     f.innerHTML = `
       <div><label class="lbl">Room</label><select class="input" name="room">${r.rooms.map(x => `<option value="${esc(x.id)}">${esc(x.name)} (${money(x.price)} a night, up to ${x.guests})</option>`).join('')}</select></div>

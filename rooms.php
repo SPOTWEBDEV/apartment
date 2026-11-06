@@ -8,6 +8,7 @@ require_once __DIR__ . '/includes/gallery.php';
 $extra_scripts = ['assets/js/receipt-image.js', 'assets/js/booking.js', 'assets/js/gallery.js'];
 include __DIR__ . '/includes/header.php';
 $fieldLabel = 'mb-1 block text-sm font-medium';
+$hasRooms = (bool)rooms_all(true);
 ?>
 <main>
 <section class="bg-lagoon pb-16 pt-36 text-white">
@@ -17,6 +18,9 @@ $fieldLabel = 'mb-1 block text-sm font-medium';
   </div>
 </section>
 
+<?php if (!$hasRooms): ?>
+<section class="mx-auto max-w-3xl px-5 py-24 text-center"><h2 class="font-display text-3xl">Our rooms are being added</h2><p class="mt-3 text-lagoon/80">Online booking opens as soon as rooms are listed. Contact the reservations team and we will help you right away.</p><a href="contact.php" class="mt-8 inline-block rounded-full bg-bronze px-8 py-3.5 font-semibold text-white hover:bg-lagoon">Contact reservations</a></section>
+<?php else: ?>
 <!-- Booking flow -->
 <section id="booking" class="mx-auto max-w-5xl scroll-mt-20 px-5 py-16">
   <div id="flow" class="rounded-3xl bg-white p-6 shadow-sm sm:p-10">
@@ -54,7 +58,7 @@ $fieldLabel = 'mb-1 block text-sm font-medium';
         <form id="guestForm" class="space-y-4 lg:col-span-3" novalidate>
           <div><label class="<?= $fieldLabel ?>" for="g_name">Full name</label><input class="field" id="g_name" name="name" autocomplete="name"><p class="err mt-1 text-sm text-red-700" data-for="name"></p></div>
           <div><label class="<?= $fieldLabel ?>" for="g_email">Email</label><input class="field" id="g_email" name="email" type="email" autocomplete="email"><p class="err mt-1 text-sm text-red-700" data-for="email"></p></div>
-          <div><label class="<?= $fieldLabel ?>" for="g_phone">Phone or WhatsApp</label><input class="field" id="g_phone" name="phone" type="tel" autocomplete="tel"><p class="err mt-1 text-sm text-red-700" data-for="phone"></p></div>
+          <div><label class="<?= $fieldLabel ?>" for="g_phone">Phone number</label><input class="field" id="g_phone" name="phone" type="tel" autocomplete="tel"><p class="err mt-1 text-sm text-red-700" data-for="phone"></p></div>
           <div><label class="<?= $fieldLabel ?>" for="g_notes">Requests (optional)</label><textarea class="field" id="g_notes" name="notes" rows="3" placeholder="Arrival time, pets, celebrations"></textarea></div>
           <div><label class="<?= $fieldLabel ?>" for="g_code">Discount code (optional)</label>
             <div class="flex gap-2"><input class="field uppercase" id="g_code" name="code" autocomplete="off"><button type="button" id="applyCode" class="shrink-0 rounded-xl border border-lagoon/25 px-5 font-semibold hover:bg-lagoon hover:text-white">Apply</button></div>
@@ -75,7 +79,7 @@ $fieldLabel = 'mb-1 block text-sm font-medium';
     <div data-panel="4" hidden>
       <h2 class="font-display text-3xl">Request sent</h2>
       <p class="mt-3 text-lg">Your reference is <strong id="refCode" class="font-display text-bronze"></strong>.</p>
-      <p class="mt-3 max-w-xl text-lagoon/80">This is a request, not a confirmed booking. The reservations team confirms by email or WhatsApp, usually within a day. We emailed you a copy with a link to your receipt, so keep that email.</p>
+      <p class="mt-3 max-w-xl text-lagoon/80">This is a request, not a confirmed booking. The reservations team confirms by email or phone, usually within a day. We emailed you a copy with a link to your receipt, so keep that email.</p>
       <div id="imagePreview" class="mt-8 hidden max-w-sm" aria-live="polite">
         <p class="mb-2 text-sm text-lagoon/70">Your receipt image downloads automatically. If it does not, press and hold the image to save it.</p>
         <img id="receiptPreview" alt="Your booking receipt" class="w-full rounded-xl border border-lagoon/15 shadow-sm">
@@ -87,9 +91,10 @@ $fieldLabel = 'mb-1 block text-sm font-medium';
       </div>
       <div class="mt-8 flex flex-wrap gap-3">
         <a id="receiptLink" href="#" class="rounded-full bg-bronze px-7 py-3 font-semibold text-white hover:bg-lagoon">Download receipt (PDF)</a>
+        <a id="payLink" href="#" class="rounded-full bg-lagoon px-7 py-3 font-semibold text-white hover:bg-tide">Send payment details</a>
         <button type="button" id="receiptImage" class="rounded-full border border-lagoon/25 px-7 py-3 font-semibold hover:bg-lagoon hover:text-white">Save receipt as image</button>
         <a href="index.php" class="rounded-full bg-lagoon px-7 py-3 font-semibold text-white hover:bg-tide">Back to home</a>
-        <a href="<?= e(whatsapp_url('Hello, I just sent a booking request.')) ?>" rel="noopener" class="rounded-full border border-lagoon/25 px-7 py-3 font-semibold hover:bg-lagoon hover:text-white">Message us on WhatsApp</a>
+        <?php if (messenger_url()): ?><a href="<?= e(messenger_url()) ?>" rel="noopener" class="rounded-full border border-lagoon/25 px-7 py-3 font-semibold hover:bg-lagoon hover:text-white">Message us on Messenger</a><?php endif; ?>
       </div>
     </div>
   </div>
@@ -114,6 +119,7 @@ $fieldLabel = 'mb-1 block text-sm font-medium';
   </article>
   <?php endforeach; ?>
 </section>
+<?php endif; ?>
 <script>window.SITE = <?= json_encode(['name'=>cfg('site_name'),'address'=>array_values((array)cfg('address',[])),'phone'=>cfg('phone'),'email'=>cfg('email'),'currency'=>cfg('currency'),'check_in'=>cfg('check_in'),'check_out'=>cfg('check_out')], JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>;</script>
 <?php render_lightbox(); ?>
 </main>
