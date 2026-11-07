@@ -131,7 +131,6 @@
   $('#q').addEventListener('input', debounce(e => { st.q = e.target.value.trim(); st.page = 1; load(); }));
   $('#method').addEventListener('change', e => { st.method = e.target.value; st.page = 1; load(); });
   $('#month').addEventListener('change', e => { st.month = e.target.value; st.page = 1; load(); });
-  $('#addPay').addEventListener('click', () => recordDrawer());
   load();
   if (qs.get('open')) api('payments', 'get', { id: qs.get('open') }).then(r => r.ok && openPayment(r.payment));
 })();

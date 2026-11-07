@@ -67,7 +67,7 @@
           <div>
             <h3 class="font-display text-xl">${esc(x.name)}</h3>
             <p class="mt-1 text-sm text-lagoon/70">${esc(x.blurb)}</p>
-            <p class="mt-2 text-sm text-lagoon/60">Sleeps up to ${x.guests}. ${peso(x.nightly)} a night.${x.left <= 2 ? ` <span class="font-medium text-bronze">Only ${x.left} left.</span>` : ''}</p>
+            <p class="mt-2 text-sm text-lagoon/60">Sleeps up to ${x.guests}. ${peso(x.nightly)} a night.</p>
           </div>
           <div class="shrink-0 sm:text-right">
             <p class="font-display text-2xl">${peso(x.total)}</p>
@@ -163,7 +163,7 @@
         if (PAY) {
           $('#payRef').textContent = r.ref; $('#payDue').textContent = peso(r.total);
           payForm.reset(); payForm.elements.ref.value = r.ref; payForm.elements.t.value = r.token;
-          payForm.elements.amount.value = r.total; payForm.elements.amount.max = r.total;
+          CLPay.setAmounts(payForm, r.total); // fills "How much are you paying?" with half / full
           go(PAY);
         } else showDone(false);
         return;
@@ -191,7 +191,7 @@
   if (params.get('checkin') && params.get('checkout')) {
     dateForm.checkin.value = params.get('checkin');
     dateForm.checkout.value = params.get('checkout');
-    if (!dateForm.guests.readOnly) dateForm.guests.value = params.get('guests') || 2;
+    if (!dateForm.guests.readOnly) dateForm.guests.value = params.get('guests') || 2; // a room page fixes guests at the room's maximum
     (async () => {
       const q = { checkin: dateForm.checkin.value, checkout: dateForm.checkout.value, guests: +dateForm.guests.value };
       if (await search(q)) {
