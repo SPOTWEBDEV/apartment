@@ -1,25 +1,16 @@
 <?php
 // Public page copy (activities and sample reviews). Rooms live in the database and are managed in Admin > Rooms.
 return [
-  // 'experiences' => [
-  //   ['Balsa raft','Free for guests. Best at sunset.','hero-raft.jpg'],
-  //   ['Two swimming pools','Clean, new and open all day.','pool.jpg'],
-  //   ['Kayaking and paddle board','Explore the cove at your own pace.',null],
-  //   ['Snorkeling and boat tours','Banca trips to nearby reefs.',null],
-  //   ['Banana boat and speed boat','For groups who want some noise.',null],
-  //   ['Kids activities','Games, sand and pool time.',null],
-  //   ['Archery and lawn games','Open grounds, pet-friendly.',null],
-  // ],
   'experiences' => [
     ['Balsa raft','Free for guests. Best at sunset.','hero-raft.jpg'],
     ['Two swimming pools','Clean, new and open all day.','pool.jpg'],
     ['Pets welcome','Bring the dog. Open lawns and shady spots for walks.','dogs.jpg'],
     ['Meeting room','A long hardwood table for team days and retreats.','meeting-room.jpg'],
-    ['Kayaking and paddle board','Explore the cove at your own pace.',null],
-    ['Snorkeling and boat tours','Banca trips to nearby reefs.',null],
-    ['Banana boat and speed boat','For groups who want some noise.',null],
-    ['Kids activities','Games, sand and pool time.',null],
-    ['Archery and lawn games','Open grounds for games.',null],
+    ['Zaphira Spa','Traditional Filipino hilot and signature massages in a quiet, lantern-lit retreat.','activities/zaphira-spa.jpg'],
+    ['Fitness Gym','Modern cardio and strength equipment, open to guests at their convenience.','activities/gym.jpg'],
+    ['Teenagers Club','A relaxed lounge with gaming corners, music and hangout zones for teen guests.','activities/teenagers-club.jpg'],
+    ['Kids Club','A bright, supervised play space with creative corners, soft play and themed activities.','activities/kids-club.jpg'],
+    ['Watersports','Kayaking and paddle boarding in the calm cove, guided by the recreation team.','activities/watersports.jpg'],
   ],
   // SAMPLE REVIEWS: ratings and dates were generated at random as placeholders.
   // Replace with real, consented guest reviews before launch.

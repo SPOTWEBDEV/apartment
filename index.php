@@ -170,6 +170,107 @@ include __DIR__ . '/includes/header.php';
 </section>
 </main>
 
+<?php
+// Promotions pop-up: the price saved on each room is the 50% price, so the original price is double.
+if (!function_exists('promo_type')) {
+  function promo_type(string $n): string {
+    foreach (['Villa', 'Suite', 'Family'] as $k) if (stripos($n, $k) !== false) return $k;
+    return strtok($n, ' ') ?: 'Room';
+  }
+}
+$promoRooms = $hasRooms ? rooms_all(true) : [];
+if ($promoRooms): ?>
+<style>
+  .promo{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:1rem}
+  .promo[hidden]{display:none}
+  .promo-backdrop{position:absolute;inset:0;background:rgba(5,13,31,.65);backdrop-filter:blur(2px)}
+  .promo-panel{position:relative;display:flex;flex-direction:column;width:100%;max-width:27.5rem;max-height:min(85vh,40rem);overflow:hidden;border-radius:1.75rem;background:#F6F4EE;box-shadow:0 30px 80px -20px rgba(0,0,0,.6);animation:promoIn .35s ease both}
+  .promo-head{position:relative;padding:1.75rem 1.5rem 1.4rem;text-align:center;color:#fff;background:linear-gradient(135deg,#14405F,#2E6C8A)}
+  .promo-brand{margin:0;font-size:.65rem;letter-spacing:.3em;text-transform:uppercase;opacity:.75}
+  .promo-head h2{margin:.5rem 0 0;font-size:1.75rem;line-height:1.15}
+  .promo-x{position:absolute;top:1rem;right:1rem;width:2.25rem;height:2.25rem;border:0;border-radius:9999px;background:rgba(255,255,255,.85);color:#14405F;font-size:1.3rem;line-height:1;cursor:pointer}
+  .promo-x:hover{background:#fff}
+  .promo-body{overflow-y:auto;padding:1.1rem 1.25rem}
+  .promo-tag{display:flex;align-items:center;gap:.4rem;margin:0 0 .75rem;font-weight:600;color:#14405F}
+  .promo-body ul{display:grid;gap:.6rem;margin:0;padding:0;list-style:none}
+  .promo-item{display:flex;align-items:center;gap:.75rem;padding:.6rem;border-radius:.9rem;background:#fff;color:#14405F;text-decoration:none;transition:box-shadow .2s}
+  .promo-item:hover,.promo-item:focus-visible{box-shadow:0 6px 18px -8px rgba(20,64,95,.4)}
+  .promo-thumb{flex:none;width:4rem;height:3.5rem;border-radius:.4rem;background-size:cover;background-position:center}
+  .promo-info{flex:1;min-width:0}
+  .promo-type{display:block;font-size:.75rem;color:#2E6C8A}
+  .promo-name{display:block;margin:.1rem 0 .25rem;overflow:hidden;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
+  .promo-old{font-size:.72rem;color:#8a97a3;text-decoration:line-through}
+  .promo-new{margin:0 .35rem;font-size:1rem;font-weight:700}
+  .promo-off{font-size:.7rem;font-weight:600;color:#dc2626}
+  .promo-go{flex:none;display:grid;place-items:center;width:2rem;height:2.5rem;border-radius:.5rem;background:#E3EEF0}
+  .promo-foot{padding:.9rem;text-align:center;border-top:1px solid rgba(20,64,95,.12)}
+  .promo-foot a{font-size:.8rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#14405F;text-decoration:none}
+  .promo-foot a:hover{color:#A8743B}
+  @keyframes promoIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.promo-panel{animation:none}}
+</style>
+<div id="promo" class="promo" hidden role="dialog" aria-modal="true" aria-labelledby="promoTitle">
+  <div class="promo-backdrop" data-close></div>
+  <div class="promo-panel">
+    <header class="promo-head">
+      <p class="promo-brand"><?= e(cfg('site_name')) ?></p>
+      <h2 id="promoTitle" class="font-display">Current Promotions</h2>
+      <button type="button" class="promo-x" data-close aria-label="Close promotions">&times;</button>
+    </header>
+    <div class="promo-body">
+      <p class="promo-tag"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>50% OFF</p>
+      <ul>
+        <?php foreach ($promoRooms as $r):
+          $thumb = !empty($r['img']) ? "url('" . e(room_img($r['img'])) . "')," : ''; ?>
+        <li>
+          <a class="promo-item" href="room.php?room=<?= e($r['id']) ?>#booking">
+            <span class="promo-thumb" style="background-image:<?= $thumb ?>linear-gradient(135deg,#14405F,#2E6C8A 55%,#F2A65A)" role="img" aria-label="<?= e($r['name']) ?>"></span>
+            <span class="promo-info">
+              <span class="promo-type"><?= e(promo_type($r['name'])) ?></span>
+              <span class="promo-name"><?= e($r['name']) ?></span>
+              <span><s class="promo-old"><?= peso($r['price'] * 2) ?></s><strong class="promo-new"><?= peso($r['price']) ?></strong><span class="promo-off">-50%</span></span>
+            </span>
+            <span class="promo-go" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>
+          </a>
+        </li>
+        <?php endforeach; ?>
+      </ul>
+    </div>
+    <div class="promo-foot"><a href="rooms.php#booking">View all rooms &rarr;</a></div>
+  </div>
+</div>
+<script>
+(function () {
+  var modal = document.getElementById('promo'); if (!modal) return;
+  var KEY = 'promoSeen', last = null;
+  function focusables() { return modal.querySelectorAll('a[href],button'); }
+  function open() {
+    last = document.activeElement; modal.hidden = false; document.body.style.overflow = 'hidden';
+    var x = modal.querySelector('.promo-x'); if (x) x.focus();
+  }
+  function close() {
+    modal.hidden = true; document.body.style.overflow = '';
+    try { sessionStorage.setItem(KEY, '1'); } catch (e) {}
+    if (last && last.focus) last.focus();
+  }
+  modal.addEventListener('click', function (e) { if (e.target.closest('[data-close]')) close(); });
+  document.addEventListener('keydown', function (e) {
+    if (modal.hidden) return;
+    if (e.key === 'Escape') { close(); return; }
+    if (e.key === 'Tab') {
+      var f = focusables(); if (!f.length) return;
+      var first = f[0], lastEl = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); lastEl.focus(); }
+      else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); first.focus(); }
+    }
+  });
+  // Shows once per visit. To show it on every page load, delete the sessionStorage check.
+  var seen = false; try { seen = !!sessionStorage.getItem(KEY); } catch (e) {}
+  if (!seen) setTimeout(open, 1200);
+})();
+</script>
+<?php endif; ?>
+
 <script>
 (function () {
   var slides = document.querySelectorAll('[data-hero] .hero-slide');
