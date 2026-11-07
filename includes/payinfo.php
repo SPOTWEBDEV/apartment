@@ -24,6 +24,17 @@ function pay_method_options(): array {
   return $opts ?: ACCOUNT_TYPES;
 }
 
+/**
+ * Amount choices for the "I have paid" form: [amount => label].
+ * Half is only offered when nothing has been paid yet ($due is the whole total, or $total is not given).
+ */
+function pay_amount_options(int $due, int $total = 0): array {
+  $opts = []; $half = (int)ceil($due / 2);
+  if ($due > 1 && $half < $due && ($total === 0 || $due >= $total)) $opts[$half] = 'Half payment';
+  if ($due > 0) $opts[$due] = ($total > 0 && $due < $total) ? 'Remaining balance' : 'Full payment';
+  return $opts;
+}
+
 /** Method picker: one button per account type the admin added, plus Crypto. */
 function render_pay_methods(): void {
   $opts = pay_method_options(); $first = array_key_first($opts); ?>
@@ -64,14 +75,18 @@ function render_payment_accounts(): void {
   if ($note !== ''): ?><p class="<?= $accounts || $wallets ? 'mt-6' : '' ?> whitespace-pre-line text-sm leading-relaxed text-lagoon/80"><?= e($note) ?></p><?php endif;
 }
 
-/** "I have paid" form. Works on the booking page (ref/token filled by script) and on the guest's private payment page. */
-function render_pay_form(string $id, int $amount, int $max, string $ref = '', string $token = '', bool $manual = false, bool $proofRequired = false): void {
+/**
+ * "I have paid" form. Works on the booking page (ref/token and amounts filled by script) and on the guest's private payment page.
+ * $max = balance still due (0 = the script fills the amount choices). $total = booking total, so "half" is
+ * only offered when nothing has been paid yet; leave it 0 if unknown. $amount is kept for older callers.
+ */
+function render_pay_form(string $id, int $amount, int $max, string $ref = '', string $token = '', bool $manual = false, bool $proofRequired = false, int $total = 0): void {
   $f = fn(string $n) => $id . '_' . $n;
   ?>
   <form id="<?= e($id) ?>" data-pay-form<?= $manual ? ' data-manual' : '' ?> class="space-y-4" novalidate>
     <input type="hidden" name="ref" value="<?= e($ref) ?>"><input type="hidden" name="t" value="<?= e($token) ?>">
     <div class="grid gap-4 sm:grid-cols-2">
-      <div><label class="mb-1 block text-sm font-medium" for="<?= $f('amount') ?>">Amount paid (<?= e(cfg('currency')) ?>)</label><input class="field" id="<?= $f('amount') ?>" name="amount" type="number" min="1" max="<?= $max ?>" value="<?= $amount ?: '' ?>"></div>
+      <div><label class="mb-1 block text-sm font-medium" for="<?= $f('amount') ?>">How much are you paying?</label><select class="field" id="<?= $f('amount') ?>" name="amount" data-amount><?php foreach (pay_amount_options($max, $total) as $v => $l): ?><option value="<?= $v ?>"<?= $v === $max ? ' selected' : '' ?>><?= e($l) ?> · <?= peso($v) ?></option><?php endforeach; ?></select></div>
       <div><label class="mb-1 block text-sm font-medium" for="<?= $f('method') ?>">Paid by</label><select class="field" id="<?= $f('method') ?>" name="method"><?php foreach (pay_method_options() as $k => $l): ?><option value="<?= $k ?>"><?= e($l) ?></option><?php endforeach; ?></select></div>
       <div><label class="mb-1 block text-sm font-medium" for="<?= $f('date') ?>">Date paid</label><input class="field" id="<?= $f('date') ?>" name="paid_at" type="date" value="<?= date('Y-m-d') ?>" max="<?= date('Y-m-d') ?>"></div>
       <div><label class="mb-1 block text-sm font-medium" for="<?= $f('ref') ?>">Reference number</label><input class="field" id="<?= $f('ref') ?>" name="reference" placeholder="From your receipt or app"></div>

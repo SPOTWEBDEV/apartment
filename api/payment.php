@@ -21,6 +21,15 @@ if ((int)$waiting->fetchColumn() >= 5) respond(['ok'=>false,'error'=>'You alread
 $amount = (int)$in('amount');
 if ($amount < 1) respond(['ok'=>false,'error'=>'Enter the amount you paid.'], 422);
 if ($amount > $balance) respond(['ok'=>false,'error'=>'That is more than the balance of ' . peso($balance) . '.'], 422);
+// Only the choices the form offers: the full balance, or half when nothing has been paid yet.
+$half = (int)ceil($balance / 2);
+$allowed = [$balance];
+if ($balance === (int)$b['total'] && $half < $balance) $allowed[] = $half;
+if (!in_array($amount, $allowed, true)) {
+  respond(['ok'=>false,'error'=>count($allowed) > 1
+    ? 'Choose half payment (' . peso($half) . ') or the full balance (' . peso($balance) . ').'
+    : 'Please pay the remaining balance of ' . peso($balance) . '.'], 422);
+}
 $method = in_array($in('method'), ['bank', 'gcash', 'maya', 'crypto', 'other'], true) ? $in('method') : 'other';
 $date = preg_match('/^\d{4}-\d{2}-\d{2}$/', $in('paid_at')) && $in('paid_at') <= date('Y-m-d') ? $in('paid_at') : date('Y-m-d');
 $reference = clean($in('reference'), 80);

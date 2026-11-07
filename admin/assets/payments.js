@@ -52,7 +52,10 @@
     const root = document.createElement('div'), kv = (k, v) => v === '' || v == null ? '' : `<div class="flex justify-between gap-4 py-2 text-sm"><dt class="text-slate-500">${k}</dt><dd class="max-w-[16rem] break-words text-right font-medium">${v}</dd></div>`;
     const img = /\.(jpe?g|png|webp)$/i.test(p.proof || ''), pending = p.status === 'pending';
     const partial = pending && +p.amount < +p.balance;
-    const reasonText = partial ? `We received ${money(p.amount)}, but the full balance of ${money(p.balance)} is required. Please send the full amount.` : '';
+    // Names the approval by size: half of the booking total, the full balance, the last part, or another partial amount.
+    const total = +p.booking_total, half = Math.ceil(total / 2);
+    const KINDS = { half: ['Approve half payment', 'Half payment approved'], full: ['Approve full payment', 'Full payment approved'], final: ['Approve final payment', 'Final payment approved'], partial: ['Approve partial payment', 'Partial payment approved'] };
+    const kindOf = a => { a = +a; if (a >= +p.balance) return +p.balance < total ? 'final' : 'full'; return a === half ? 'half' : 'partial'; };
     root.innerHTML = `
       <div class="flex flex-wrap items-center gap-2">${sbadge(p.status)}<span class="badge bg-slate-100 text-slate-600">${p.submitted_by === 'guest' ? 'Sent by guest' : 'Recorded by staff'}</span></div>
       <dl class="mt-5 divide-y divide-slate-100">
@@ -63,32 +66,34 @@
       </dl>
       ${p.proof ? `<h3 class="mt-6 text-sm font-semibold">Proof of payment</h3>${img ? `<a href="proof.php?id=${p.id}" target="_blank" rel="noopener"><img src="proof.php?id=${p.id}" alt="Proof of payment" class="mt-2 max-h-96 rounded-xl border border-slate-200"></a>` : `<a class="btn-ghost mt-2" href="proof.php?id=${p.id}" target="_blank" rel="noopener">Open the PDF</a>`}` : (pending ? '<p class="mt-6 text-sm text-slate-400">The guest did not attach a screenshot.</p>' : '')}
       ${pending ? `
-        ${partial ? `
-          <div class="mt-8 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-            <strong>Partial payment.</strong> The guest sent ${money(p.amount)}, but the balance is ${money(p.balance)}. Decline it with a reason so the guest can pay the full amount.
-          </div>` : `
-          <div class="mt-8 rounded-2xl border border-slate-200 p-4">
-            <h3 class="text-sm font-semibold">Approve</h3>
-            <p class="mt-1 text-xs text-slate-500">Check the money arrived first. Approving also confirms the booking.</p>
-            <button id="approve" class="btn-primary mt-3">Approve payment (${money(Math.min(p.amount, p.balance))})</button>
-          </div>`}
+        <div class="mt-8 rounded-2xl border border-slate-200 p-4">
+          <h3 class="text-sm font-semibold">Approve</h3>
+          <p class="mt-1 text-xs text-slate-500">Check the money arrived first. Approving also confirms the booking.</p>
+          ${partial ? `<p class="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">Partial payment: the guest sent ${money(p.amount)} of the ${money(p.balance)} balance. If you approve it, the rest stays due.</p>` : ''}
+          <div class="mt-3 flex items-end gap-3"><div class="flex-1"><label class="lbl" for="apAmt">Amount to credit</label><input id="apAmt" class="input" type="number" min="1" max="${p.balance}" value="${Math.min(p.amount, p.balance)}"></div><button id="approve" class="btn-primary">${KINDS[kindOf(Math.min(p.amount, p.balance))][0]}</button></div>
+        </div>
         <div class="mt-4 rounded-2xl border border-slate-200 p-4">
           <h3 class="text-sm font-semibold">Decline</h3>
           <label class="lbl mt-3" for="reason">Reason (the guest receives this by email)</label>
-          <textarea id="reason" class="input" rows="3" placeholder="e.g. We could not find this transfer in our account">${esc(reasonText)}</textarea>
+          <textarea id="reason" class="input" rows="3" placeholder="e.g. We could not find this transfer in our account"></textarea>
           <button id="decline" class="btn-danger mt-2">Decline payment</button>
         </div>
         <p id="err" class="mt-3 text-sm text-red-700" role="alert"></p>` : (p.status === 'paid' ? '<button id="refund" class="btn-danger mt-6">Mark as refunded</button>' : '')}`;
     drawer.open(pending ? 'Review payment' : 'Payment details', root);
+    root.addEventListener('input', e => {
+      if (e.target.id !== 'apAmt') return;
+      const b = $('#approve', root); if (b) b.textContent = KINDS[kindOf(e.target.value)][0];
+    });
     const fail = m => { const el = $('#err', root); if (el) el.textContent = m; };
     root.addEventListener('click', async e => {
       const done = (msg) => { toast(msg); drawer.close(); load(); };
       if (e.target.id === 'approve') {
         e.target.disabled = true;
-        const r = await api('payments', 'approve', { id: p.id, amount: Math.min(p.amount, p.balance) });
+        const amt = $('#apAmt', root).value, label = KINDS[kindOf(amt)][1];
+        const r = await api('payments', 'approve', { id: p.id, amount: amt });
         if (r.ok) {
           const confirmed = await autoConfirm(p.booking_id);
-          done(confirmed ? 'Payment approved and booking confirmed' : 'Payment approved');
+          done(confirmed ? label + ' and booking confirmed' : label);
         } else { fail(r.error); e.target.disabled = false; }
       }
       if (e.target.id === 'decline') {

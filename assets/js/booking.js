@@ -47,8 +47,9 @@
     try {
       const r = await api('availability.php', q);
       if (!r.ok) { dateMsg.textContent = r.error || 'Could not check availability.'; go(1, { scroll: false }); return false; }
-      state.q = q; state.nights = r.nights; state.rooms = r.rooms;
-      if (!r.rooms.length) { dateMsg.textContent = 'No rooms fit those dates and guest count. Try fewer guests or different dates.'; go(1, { scroll: false }); return false; }
+      const only = flow.dataset.room; // on a room page, offer only that room
+      state.q = q; state.nights = r.nights; state.rooms = only ? r.rooms.filter(x => x.id === only) : r.rooms;
+      if (!state.rooms.length) { dateMsg.textContent = only ? 'This room cannot be booked for those dates. Try different dates.' : 'No rooms fit those dates and guest count. Try fewer guests or different dates.'; go(1, { scroll: false }); return false; }
       dateMsg.textContent = '';
       renderRooms();
       return true;
@@ -190,7 +191,7 @@
   if (params.get('checkin') && params.get('checkout')) {
     dateForm.checkin.value = params.get('checkin');
     dateForm.checkout.value = params.get('checkout');
-    dateForm.guests.value = params.get('guests') || 2;
+    if (!dateForm.guests.readOnly) dateForm.guests.value = params.get('guests') || 2;
     (async () => {
       const q = { checkin: dateForm.checkin.value, checkout: dateForm.checkout.value, guests: +dateForm.guests.value };
       if (await search(q)) {

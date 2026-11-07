@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/_layout.php';
-admin_open('Payments', 'payments', 'Review payments guests send, and record money you received yourself.', '<a id="export" href="api/payments.php?action=export" class="btn-ghost">Export CSV</a><button id="addPay" class="btn-primary">Record payment</button>');
+admin_open('Payments', 'payments', 'Review payments guests send, and record money you received yourself.', '<a id="export" href="api/payments.php?action=export" class="btn-ghost">Export CSV</a>');
 ?>
 <section id="sum" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><?php for ($i = 0; $i < 4; $i++): ?><div class="card skel h-28"></div><?php endfor; ?></section>
 <div class="card mt-6 overflow-hidden">

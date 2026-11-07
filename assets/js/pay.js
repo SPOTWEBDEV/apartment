@@ -19,6 +19,18 @@ window.CLPay = (() => {
     } catch { return file; }
   }
 
+  // Fills the "How much are you paying?" select: half (only when nothing is paid yet) or the full amount due.
+  // due = amount still owed, total = booking total (omit it when nothing has been paid yet).
+  function setAmounts(form, due, total = 0) {
+    const sel = form.elements.namedItem('amount'); if (!sel || !(due > 0)) return;
+    const money = n => (window.CL && window.CL.peso) ? window.CL.peso(n) : '₱' + Number(n).toLocaleString('en-PH');
+    const half = Math.ceil(due / 2), opts = [];
+    if (due > 1 && half < due && (!total || due >= total)) opts.push([half, 'Half payment']);
+    opts.push([due, total && due < total ? 'Remaining balance' : 'Full payment']);
+    sel.innerHTML = opts.map(([v, l]) => `<option value="${v}">${l} · ${money(v)}</option>`).join('');
+    sel.value = String(due);
+  }
+
   function bindMethods(root) {
   const bar = root.querySelector('[data-pay-methods]'); if (!bar) return;
   const form = root.querySelector('[data-pay-form]');
@@ -61,5 +73,5 @@ window.CLPay = (() => {
   }
 
   document.querySelectorAll('[data-pay-form]:not([data-manual])').forEach(f => init(f));
-  return { init };
+  return { init, setAmounts };
 })();

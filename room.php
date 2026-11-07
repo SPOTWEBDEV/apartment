@@ -56,7 +56,7 @@ $doneN = count($steps);
       <form id="dateForm" class="mt-6 grid gap-4 sm:grid-cols-3" novalidate>
         <div><label class="<?= $fieldLabel ?>" for="checkin">Check-in</label><input class="field" id="checkin" name="checkin" type="date" required></div>
         <div><label class="<?= $fieldLabel ?>" for="checkout">Check-out</label><input class="field" id="checkout" name="checkout" type="date" required></div>
-        <div><label class="<?= $fieldLabel ?>" for="guests">Guests</label><input class="field" id="guests" name="guests" type="number" min="1" max="<?= (int)$room['guests'] ?>" value="2"></div>
+        <div><label class="<?= $fieldLabel ?>" for="guests">Guests (maximum)</label><input class="field bg-foam" id="guests" name="guests" type="text" value="<?= (int)$room['guests'] ?>" readonly aria-readonly="true"><p class="mt-1 text-xs text-lagoon/60">This room sleeps up to <?= (int)$room['guests'] ?> guests.</p></div>
         <button class="rounded-full bg-bronze px-7 py-3.5 font-semibold text-white hover:bg-lagoon disabled:opacity-60 sm:col-span-3 sm:w-fit">Check this room</button>
       </form>
       <p id="dateMsg" class="mt-4 min-h-6 text-sm text-red-700" role="status" aria-live="polite"></p>

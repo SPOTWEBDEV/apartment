@@ -15,20 +15,20 @@ function validate_stay(array $in): array {
   return [null, ['checkin'=>$a->format('Y-m-d'), 'checkout'=>$b->format('Y-m-d'), 'guests'=>$guests, 'nights'=>$n]];
 }
 
+/** How many active bookings overlap these dates. No longer used to block bookings; kept for reports. */
 function room_used(PDO $pdo, string $roomId, string $in, string $out, int $excludeId = 0): int {
   $s = $pdo->prepare("SELECT COUNT(*) FROM bookings WHERE room_id=? AND status!='cancelled' AND checkin<? AND checkout>? AND id!=?");
   $s->execute([$roomId, $out, $in, $excludeId]);
   return (int)$s->fetchColumn();
 }
 
+/** Every room that sleeps enough guests is offered, whether or not it is already booked for those dates. */
 function rooms_available(array $rooms, array $q): array {
-  $pdo = db(); $out = [];
+  $out = [];
   foreach ($rooms as $r) {
     if ($r['guests'] < $q['guests']) continue;
-    $left = (int)$r['units'] - room_used($pdo, $r['id'], $q['checkin'], $q['checkout']);
-    if ($left < 1) continue;
     $out[] = ['id'=>$r['id'],'name'=>$r['name'],'blurb'=>$r['blurb'],'img'=>$r['img'],'guests'=>$r['guests'],
-      'nightly'=>$r['price'],'total'=>$r['price'] * $q['nights'],'left'=>$left];
+      'nightly'=>$r['price'],'total'=>$r['price'] * $q['nights']];
   }
   return $out;
 }
@@ -49,13 +49,12 @@ function discount_eval(?array $d, int $nights, int $subtotal): array {
   return [null, $amt];
 }
 
-/** Atomic availability check + insert (BEGIN IMMEDIATE takes the write lock first). */
+/** Inserts the booking (BEGIN IMMEDIATE takes the write lock first). Dates are never checked against other bookings. */
 function booking_create(array $room, array $q, array $guest, string $code = '', string $status = 'pending', string $source = 'web'): array {
   $pdo = db(); $open = false;
   $subtotal = (int)$room['price'] * $q['nights']; $disc = 0; $dcode = '';
   try {
     $pdo->exec('BEGIN IMMEDIATE'); $open = true;
-    if (room_used($pdo, $room['id'], $q['checkin'], $q['checkout']) >= (int)$room['units']) { $pdo->exec('ROLLBACK'); return ['ok'=>false,'reason'=>'unavailable']; }
     if ($code !== '') {
       $d = discount_find($code); [$err, $disc] = discount_eval($d, $q['nights'], $subtotal);
       if ($err) { $pdo->exec('ROLLBACK'); return ['ok'=>false,'reason'=>'discount','error'=>$err]; }
