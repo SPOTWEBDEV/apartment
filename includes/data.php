@@ -1,14 +1,25 @@
 <?php
 // Public page copy (activities and sample reviews). Rooms live in the database and are managed in Admin > Rooms.
 return [
+  // 'experiences' => [
+  //   ['Balsa raft','Free for guests. Best at sunset.','hero-raft.jpg'],
+  //   ['Two swimming pools','Clean, new and open all day.','pool.jpg'],
+  //   ['Kayaking and paddle board','Explore the cove at your own pace.',null],
+  //   ['Snorkeling and boat tours','Banca trips to nearby reefs.',null],
+  //   ['Banana boat and speed boat','For groups who want some noise.',null],
+  //   ['Kids activities','Games, sand and pool time.',null],
+  //   ['Archery and lawn games','Open grounds, pet-friendly.',null],
+  // ],
   'experiences' => [
     ['Balsa raft','Free for guests. Best at sunset.','hero-raft.jpg'],
     ['Two swimming pools','Clean, new and open all day.','pool.jpg'],
+    ['Pets welcome','Bring the dog. Open lawns and shady spots for walks.','dogs.jpg'],
+    ['Meeting room','A long hardwood table for team days and retreats.','meeting-room.jpg'],
     ['Kayaking and paddle board','Explore the cove at your own pace.',null],
     ['Snorkeling and boat tours','Banca trips to nearby reefs.',null],
     ['Banana boat and speed boat','For groups who want some noise.',null],
     ['Kids activities','Games, sand and pool time.',null],
-    ['Archery and lawn games','Open grounds, pet-friendly.',null],
+    ['Archery and lawn games','Open grounds for games.',null],
   ],
   // SAMPLE REVIEWS: ratings and dates were generated at random as placeholders.
   // Replace with real, consented guest reviews before launch.

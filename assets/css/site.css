@@ -33,3 +33,13 @@ html{scroll-behavior:smooth}
 .step.is-current .dot{background:#A8743B;border-color:#A8743B;color:#fff}
 .step.is-done{color:#0B2A43}
 .step.is-done .dot{background:#0B2A43;border-color:#0B2A43;color:#fff}
+
+
+/* Hero slideshow */
+.hero-slide{opacity:0;transition:opacity 1.2s ease}
+.hero-slide.is-active{opacity:1}
+@media (prefers-reduced-motion:reduce){.hero-slide{transition:none}}
+
+.pay-tab[aria-selected="true"]{background:#0B2A43;color:#fff;border-color:#0B2A43}
+.pay-method[aria-pressed="true"]{background:#0B2A43;color:#fff;border-color:#0B2A43}
+[data-acct-group][hidden]+[data-acct-group]{margin-top:0}

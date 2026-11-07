@@ -49,6 +49,9 @@ function cfg(string $key, $default = null) {
   }
   return $v;
 }
+function room_img(string $f): string {
+  return 'assets/img/' . (str_contains($f, '/') ? $f : 'rooms/' . $f);
+}
 function e($s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 function peso($n): string { return cfg('currency', '₱') . number_format((float)$n); }
 /** Accepts a page name, an m.me / facebook.com link or a numeric page id and returns just the handle ('' if invalid). */

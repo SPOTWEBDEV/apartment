@@ -10,6 +10,17 @@
   const card = (l, v, s, hot) => `<div class="card p-6 ${hot ? 'ring-2 ring-amber-300' : ''}"><p class="text-sm font-medium text-slate-500">${l}</p><p class="mt-2 text-3xl font-bold tracking-tight">${v}</p><p class="mt-2 text-sm text-slate-400">${s}</p></div>`;
   let list = [];
 
+  // Confirms the booking after a payment is approved.
+  // Only moves bookings that are still pending, so checked-in or completed stays are never moved backwards.
+  async function autoConfirm(bookingId) {
+    const r = await api('bookings', 'get', { id: bookingId });
+    if (r.ok && r.booking.status === 'pending' && r.next.includes('confirmed')) {
+      const x = await api('bookings', 'status', { id: bookingId, status: 'confirmed' });
+      return x.ok;
+    }
+    return false;
+  }
+
   const sync = () => { $('#export').href = 'api/payments.php?' + new URLSearchParams({ action: 'export', q: st.q, method: st.method, status: st.status, month: st.month }); };
 
   async function load() {
@@ -40,6 +51,8 @@
   function openPayment(p) {
     const root = document.createElement('div'), kv = (k, v) => v === '' || v == null ? '' : `<div class="flex justify-between gap-4 py-2 text-sm"><dt class="text-slate-500">${k}</dt><dd class="max-w-[16rem] break-words text-right font-medium">${v}</dd></div>`;
     const img = /\.(jpe?g|png|webp)$/i.test(p.proof || ''), pending = p.status === 'pending';
+    const partial = pending && +p.amount < +p.balance;
+    const reasonText = partial ? `We received ${money(p.amount)}, but the full balance of ${money(p.balance)} is required. Please send the full amount.` : '';
     root.innerHTML = `
       <div class="flex flex-wrap items-center gap-2">${sbadge(p.status)}<span class="badge bg-slate-100 text-slate-600">${p.submitted_by === 'guest' ? 'Sent by guest' : 'Recorded by staff'}</span></div>
       <dl class="mt-5 divide-y divide-slate-100">
@@ -50,25 +63,33 @@
       </dl>
       ${p.proof ? `<h3 class="mt-6 text-sm font-semibold">Proof of payment</h3>${img ? `<a href="proof.php?id=${p.id}" target="_blank" rel="noopener"><img src="proof.php?id=${p.id}" alt="Proof of payment" class="mt-2 max-h-96 rounded-xl border border-slate-200"></a>` : `<a class="btn-ghost mt-2" href="proof.php?id=${p.id}" target="_blank" rel="noopener">Open the PDF</a>`}` : (pending ? '<p class="mt-6 text-sm text-slate-400">The guest did not attach a screenshot.</p>' : '')}
       ${pending ? `
-        <div class="mt-8 rounded-2xl border border-slate-200 p-4">
-          <h3 class="text-sm font-semibold">Approve</h3>
-          <p class="mt-1 text-xs text-slate-500">Check the money arrived first. You can lower the amount to approve only part of it.</p>
-          <div class="mt-3 flex items-end gap-3"><div class="flex-1"><label class="lbl" for="apAmt">Amount to credit</label><input id="apAmt" class="input" type="number" min="1" max="${p.balance}" value="${Math.min(p.amount, p.balance)}"></div><button id="approve" class="btn-primary">Approve payment</button></div>
-        </div>
+        ${partial ? `
+          <div class="mt-8 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+            <strong>Partial payment.</strong> The guest sent ${money(p.amount)}, but the balance is ${money(p.balance)}. Decline it with a reason so the guest can pay the full amount.
+          </div>` : `
+          <div class="mt-8 rounded-2xl border border-slate-200 p-4">
+            <h3 class="text-sm font-semibold">Approve</h3>
+            <p class="mt-1 text-xs text-slate-500">Check the money arrived first. Approving also confirms the booking.</p>
+            <button id="approve" class="btn-primary mt-3">Approve payment (${money(Math.min(p.amount, p.balance))})</button>
+          </div>`}
         <div class="mt-4 rounded-2xl border border-slate-200 p-4">
           <h3 class="text-sm font-semibold">Decline</h3>
           <label class="lbl mt-3" for="reason">Reason (the guest receives this by email)</label>
-          <textarea id="reason" class="input" rows="2" placeholder="e.g. We could not find this transfer in our account"></textarea>
+          <textarea id="reason" class="input" rows="3" placeholder="e.g. We could not find this transfer in our account">${esc(reasonText)}</textarea>
           <button id="decline" class="btn-danger mt-2">Decline payment</button>
         </div>
         <p id="err" class="mt-3 text-sm text-red-700" role="alert"></p>` : (p.status === 'paid' ? '<button id="refund" class="btn-danger mt-6">Mark as refunded</button>' : '')}`;
     drawer.open(pending ? 'Review payment' : 'Payment details', root);
-    const fail = m => { $('#err', root).textContent = m; };
+    const fail = m => { const el = $('#err', root); if (el) el.textContent = m; };
     root.addEventListener('click', async e => {
       const done = (msg) => { toast(msg); drawer.close(); load(); };
       if (e.target.id === 'approve') {
-        e.target.disabled = true; const r = await api('payments', 'approve', { id: p.id, amount: $('#apAmt', root).value });
-        r.ok ? done('Payment approved') : (fail(r.error), e.target.disabled = false);
+        e.target.disabled = true;
+        const r = await api('payments', 'approve', { id: p.id, amount: Math.min(p.amount, p.balance) });
+        if (r.ok) {
+          const confirmed = await autoConfirm(p.booking_id);
+          done(confirmed ? 'Payment approved and booking confirmed' : 'Payment approved');
+        } else { fail(r.error); e.target.disabled = false; }
       }
       if (e.target.id === 'decline') {
         e.target.disabled = true; const r = await api('payments', 'decline', { id: p.id, reason: $('#reason', root).value });
@@ -82,8 +103,8 @@
 
   function recordDrawer(preset = {}) {
     const root = document.createElement('div');
-    root.innerHTML = `<p class="mb-4 text-sm text-slate-500">Use this for money you already received yourself (cash, a bank transfer you checked). It is approved straight away.</p><label class="lbl" for="bs">Find a booking</label><input id="bs" class="input" placeholder="Guest name or reference" autocomplete="off"><ul id="bres" class="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200"></ul><div id="bform" class="mt-6"></div>`;
-    drawer.open(preset.method === 'crypto' ? 'Record crypto payment' : 'Record payment', root);
+    root.innerHTML = `<p class="mb-4 text-sm text-slate-500">Use this for money you already received yourself (cash, a bank transfer you checked). It is approved straight away and confirms the booking.</p><label class="lbl" for="bs">Find a booking</label><input id="bs" class="input" placeholder="Guest name or reference" autocomplete="off"><ul id="bres" class="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200"></ul><div id="bform" class="mt-6"></div>`;
+    drawer.open('Record payment', root);
     const input = $('#bs', root), results = $('#bres', root);
     const search = async () => {
       const r = await api('payments', 'booking_search', { q: input.value.trim() });
@@ -93,7 +114,8 @@
     results.addEventListener('click', e => {
       const b = e.target.closest('[data-b]'); if (!b) return;
       const bk = JSON.parse(b.dataset.b); results.innerHTML = `<li class="px-4 py-3 text-sm"><strong>${esc(bk.name)}</strong> · ${esc(bk.ref)}</li>`;
-      const holder = $('#bform', root); holder.innerHTML = ''; holder.append(payForm(bk, () => { drawer.close(); load(); }, preset));
+      const holder = $('#bform', root); holder.innerHTML = '';
+      holder.append(payForm(bk, async () => { await autoConfirm(bk.id); drawer.close(); load(); }, preset));
     });
   }
 
@@ -105,7 +127,6 @@
   $('#method').addEventListener('change', e => { st.method = e.target.value; st.page = 1; load(); });
   $('#month').addEventListener('change', e => { st.month = e.target.value; st.page = 1; load(); });
   $('#addPay').addEventListener('click', () => recordDrawer());
-  $('#addCrypto').addEventListener('click', () => recordDrawer({ method: 'crypto' }));
   load();
   if (qs.get('open')) api('payments', 'get', { id: qs.get('open') }).then(r => r.ok && openPayment(r.payment));
 })();

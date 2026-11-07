@@ -93,11 +93,12 @@ switch ($action) {
     respond(['ok'=>true]);
 
   case 'delete':
-    if ((int)val('SELECT COUNT(*) FROM bookings WHERE room_id=?', [p('id')]) > 0)
-      respond(['ok'=>false,'error'=>'This room has bookings, so it cannot be deleted. Switch it off instead to hide it from the website.'], 409);
-    $files = array_column(room_images(p('id')), 'file');
-    $pdo->prepare('DELETE FROM room_images WHERE room_id=?')->execute([p('id')]);
-    $pdo->prepare('DELETE FROM rooms WHERE id=?')->execute([p('id')]);
+    $id = p('id');
+    $files = array_column(room_images($id), 'file');
+    $pdo->beginTransaction();
+    $pdo->prepare('DELETE FROM room_images WHERE room_id=?')->execute([$id]);
+    $pdo->prepare('DELETE FROM rooms WHERE id=?')->execute([$id]);
+    $pdo->commit();
     foreach ($files as $f) drop_file($f);
     respond(['ok'=>true]);
 }

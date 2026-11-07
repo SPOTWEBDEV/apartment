@@ -62,3 +62,38 @@
     if (r.ok) { msg.classList.add('text-emerald-700'); msg.textContent = 'Saved.'; toast('Crypto wallets saved'); } else { msg.classList.add('text-red-700'); msg.textContent = r.error; }
   });
 })();
+
+// Bank and e-wallet accounts
+(() => {
+  const { $, $$, api, toast, esc } = A;
+  const form = $('#accountsForm'), list = $('#accountRows');
+  const TYPES = { bank: 'Bank transfer', gcash: 'GCash', maya: 'Maya', other: 'Other' };
+  const empty = () => { if (!list.children.length) list.innerHTML = '<p class="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-center text-sm text-slate-400" data-empty>No accounts yet. Add the bank or e-wallet guests should pay to.</p>'; };
+
+  function addRow(a = {}) {
+    $('[data-empty]', list)?.remove();
+    const row = document.createElement('div'); row.className = 'grid gap-2 rounded-xl border border-slate-200 p-3 sm:grid-cols-2';
+    row.innerHTML = `
+      <select class="input" data-f="type" aria-label="Account type">${Object.entries(TYPES).map(([k, l]) => `<option value="${k}" ${k === (a.type || 'bank') ? 'selected' : ''}>${l}</option>`).join('')}</select>
+      <input class="input" data-f="label" value="${esc(a.label || '')}" placeholder="Bank or wallet name, e.g. BDO" aria-label="Bank or wallet name" maxlength="60">
+      <input class="input" data-f="name" value="${esc(a.name || '')}" placeholder="Account name" aria-label="Account name" maxlength="80">
+      <input class="input font-mono" data-f="number" value="${esc(a.number || '')}" placeholder="Account or mobile number" aria-label="Account or mobile number" maxlength="40">
+      <input class="input sm:col-span-2" data-f="note" value="${esc(a.note || '')}" placeholder="Note shown to guests (optional), e.g. Savings account, Laiya branch" aria-label="Note" maxlength="120">
+      <button type="button" class="btn-danger btn-sm justify-self-end sm:col-span-2" data-rm>Remove</button>`;
+    $('[data-rm]', row).addEventListener('click', () => { row.remove(); empty(); });
+    list.append(row);
+  }
+
+  api('settings', 'get').then(r => { if (r.ok) { (r.values.payment_accounts || []).forEach(addRow); empty(); const t = $('[name=payment_instructions]'); if (t) t.value = r.values.payment_instructions || ''; } });
+  $('#addAccount').addEventListener('click', () => addRow());
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const accounts = $$('#accountRows > div[class*=grid]').map(row => Object.fromEntries($$('[data-f]', row).map(i => [i.dataset.f, i.value.trim()])));
+    const msg = $('[data-msg]', form); msg.className = 'text-sm'; msg.textContent = '';
+    const btn = $('button:not([type=button])', form); btn.disabled = true;
+    const r = await api('settings', 'save', { section: 'accounts', accounts: JSON.stringify(accounts), payment_instructions: form.payment_instructions.value });
+    btn.disabled = false;
+    if (r.ok) { msg.classList.add('text-emerald-700'); msg.textContent = 'Saved. Guests see these accounts on the payment step.'; toast('Payment accounts saved'); } else { msg.classList.add('text-red-700'); msg.textContent = r.error; }
+  });
+})();

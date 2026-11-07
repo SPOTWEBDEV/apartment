@@ -13,7 +13,7 @@ Pure PHP 8.1+, SQLite, Tailwind (CDN), vanilla JavaScript, GSAP. No Composer or 
    - `APP_URL` is the public address, used for links in emails.
    - `MAIL_*` are your SMTP details (leave `MAIL_HOST` empty to use PHP `mail()`).
 3. Make these writable by PHP: `storage/` (database, inquiries) and `assets/img/` (room photo uploads).
-4. Open the site once so the database is created, then sign in at `/admin/login.php`. The admin starts completely empty: add your rooms in Admin > Rooms, and fill in your Messenger page, payment instructions, check-in and check-out times and social links in Admin > Settings. Anything you leave empty is simply hidden on the website.
+4. Open the site once so the database is created, then sign in at `/admin/login.php`. The admin starts completely empty: add your rooms in Admin > Rooms, and add your bank, e-wallet and crypto accounts, your Messenger page, check-in and check-out times and social links in Admin > Settings. Anything you leave empty is simply hidden on the website.
 5. Check email works: `php tools/test-mail.php you@example.com`.
 
 Forgot the password, or created the database before setting `.env`? Run `php tools/create-admin.php you@example.com "new long password"`.
@@ -25,7 +25,7 @@ Forgot the password, or created the database before setting `.env`? Run `php too
 | Search engines | `robots.txt`, `sitemap.php` |
 | Receipts | `receipt.php` (PDF, secret link), `assets/js/receipt-image.js` (PNG on the booking page) |
 | Admin | `admin/` (dashboard, bookings, calendar, rooms, payments, messages, discounts, settings) |
-| Guest payments | `pay.php` (private link in the booking email), `api/payment.php`. Guests send payment details and a screenshot; staff approve or decline in Admin > Payments. Screenshots are stored in `storage/proofs/` and only shown to signed-in admins |
+| Payment step | The booking flow ends with a **Payment** step (shown when you have added accounts) listing your bank, e-wallet and crypto accounts, with a form for the guest to send their payment details and a screenshot. Add the accounts in Admin > Settings (Bank and e-wallet accounts, Crypto payments). Payments wait in Admin > Payments as "Needs review" until staff approve or decline them. Guests can also pay later from the private link in their booking email (`pay.php`). Screenshots are stored in `storage/proofs/` and only signed-in admins can open them |
 | Messages | Contact form and table reservations land in Admin > Messages (`inquiries` table) and are also emailed |
 | Defaults for site name, contact, hours | `includes/config.php` (Admin > Settings overrides these) |
 | Secrets | `.env` only. Never commit it |

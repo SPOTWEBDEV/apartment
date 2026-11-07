@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/_boot.php';
 require_once __DIR__ . '/../../includes/crypto.php';
+require_once __DIR__ . '/../../includes/payinfo.php';
 
 function put(string $k, string $v): void {
   global $pdo;
@@ -13,7 +14,7 @@ switch ($action) {
       'site_name'=>cfg('site_name'), 'tagline'=>cfg('tagline'), 'email'=>cfg('email'), 'phone'=>cfg('phone'), 'messenger'=>cfg('messenger'), 'payment_instructions'=>cfg('payment_instructions', ''),
       'address'=>implode("\n", cfg('address', [])), 'check_in'=>cfg('check_in'), 'check_out'=>cfg('check_out'), 'max_nights'=>cfg('max_nights', 30),
       'currency'=>cfg('currency'), 'facebook'=>cfg('social.facebook'), 'instagram'=>cfg('social.instagram'),
-      'crypto_enabled'=>(settings_all()['crypto_enabled'] ?? '0') === '1', 'wallets'=>crypto_wallets(false)]]);
+      'payment_accounts'=>payment_accounts(), 'crypto_enabled'=>(settings_all()['crypto_enabled'] ?? '0') === '1', 'wallets'=>crypto_wallets(false)]]);
 
   case 'save':
     $s = p('section');
@@ -26,7 +27,20 @@ switch ($action) {
       if (p('messenger') !== '' && $mh === '') respond(['ok'=>false,'error'=>'That does not look like a Facebook page name. Use the part after facebook.com/ in your page link.'], 422);
       put('email', p('email')); put('phone', clean(p('phone'), 40)); put('phone_tel', preg_replace('/[^\d+]/', '', p('phone'))); put('messenger', $mh);
       put('address', implode("\n", array_filter(array_map(fn($x) => clean($x, 120), preg_split('/\R/', p('address'))))));
-    } elseif ($s === 'payments') {
+    } elseif ($s === 'accounts') {
+      $list = json_decode(p('accounts', '[]'), true); if (!is_array($list)) $list = [];
+      if (count($list) > 8) respond(['ok'=>false,'error'=>'You can list up to 8 accounts.'], 422);
+      $clean = [];
+      foreach ($list as $i => $x) {
+        $type = (string)($x['type'] ?? ''); $label = clean((string)($x['label'] ?? ''), 60); $name = clean((string)($x['name'] ?? ''), 80); $num = clean((string)($x['number'] ?? ''), 40);
+        $n = $i + 1;
+        if (!isset(ACCOUNT_TYPES[$type])) respond(['ok'=>false,'error'=>"Account $n: choose a type."], 422);
+        if ($label === '') respond(['ok'=>false,'error'=>"Account $n: enter the bank or wallet name."], 422);
+        if ($name === '') respond(['ok'=>false,'error'=>"Account $n: enter the account name."], 422);
+        if (!preg_match('/^[A-Za-z0-9 .\-_\/]{4,40}$/', $num)) respond(['ok'=>false,'error'=>"Account $n: enter the account or mobile number (4 to 40 letters, numbers, spaces or dashes)."], 422);
+        $clean[] = ['type'=>$type, 'label'=>$label, 'name'=>$name, 'number'=>$num, 'note'=>clean((string)($x['note'] ?? ''), 120)];
+      }
+      put('payment_accounts', json_encode($clean));
       put('payment_instructions', mb_substr(trim(strip_tags(p('payment_instructions'))), 0, 1500));
     } elseif ($s === 'stay') {
       $n = pint('max_nights'); if ($n < 1 || $n > 90) respond(['ok'=>false,'error'=>'Maximum nights must be between 1 and 90.'], 422);

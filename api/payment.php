@@ -51,6 +51,10 @@ if ($f && $f['error'] !== UPLOAD_ERR_NO_FILE) {
 }
 if ($reference === '' && $hash === '' && $proof === '') respond(['ok'=>false,'error'=>'Add a reference number, or upload a screenshot of your payment.'], 422);
 
+$same = $pdo->prepare("SELECT 1 FROM payments WHERE booking_id=? AND status='pending' AND amount=? AND method=? AND reference=? AND tx_hash=? AND created_at >= ?");
+$same->execute([$b['id'], $amount, $method, $reference, $hash, date('Y-m-d H:i:s', time() - 600)]);
+if ($same->fetch()) respond(['ok'=>true]); // already received a moment ago
+
 $pdo->prepare("INSERT INTO payments(booking_id,amount,method,reference,note,status,paid_at,created_at,coin,network,tx_hash,crypto_amount,proof,submitted_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
     ->execute([$b['id'], $amount, $method, $reference, '', 'pending', $date, date('Y-m-d H:i:s'), $coin, $network, $hash, $camt, $proof, 'guest']);
 

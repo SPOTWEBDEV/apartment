@@ -37,7 +37,7 @@ $summary = "Reference: {$b['ref']}\nRoom: {$b['room_name']}\nCheck-in: {$b['chec
 send_mail(cfg('email'), "New booking request {$b['ref']}", "$summary\n\nGuest: $name\nEmail: $email\nPhone: $phone\nNotes: $notes", $email);
 send_mail($email, 'We received your booking request (' . $b['ref'] . ')', "Hello $name,\n\nThank you for choosing " . cfg('site_name') . ". This is a request, not a confirmed booking. Our reservations team will confirm by email or phone.\n\n$summary\n\nDownload your receipt (PDF): " . base_url(2) . '/' . receipt_path($b) . "\n\nSend your payment details here once you have paid: " . base_url(2) . '/' . pay_path($b) . "\n\n" . cfg('site_name'), cfg('email'));
 
-respond(['ok'=>true,'ref'=>$b['ref'],'total'=>$b['total'],'receipt'=>receipt_path($b),'pay'=>pay_path($b),'summary'=>[
+respond(['ok'=>true,'ref'=>$b['ref'],'total'=>$b['total'],'receipt'=>receipt_path($b),'pay'=>pay_path($b),'token'=>$b['token'],'summary'=>[
   'ref'=>$b['ref'],'name'=>$b['name'],'email'=>$b['email'],'phone'=>$b['phone'],'room'=>$b['room_name'],'checkin'=>$b['checkin'],'checkout'=>$b['checkout'],
   'nights'=>(int)$b['nights'],'guests'=>(int)$b['guests'],'subtotal'=>(int)$b['subtotal'],'discount_code'=>$b['discount_code'],'discount_amount'=>(int)$b['discount_amount'],
   'total'=>(int)$b['total'],'paid'=>0,'balance'=>(int)$b['total'],'status_label'=>'Pending confirmation']]);

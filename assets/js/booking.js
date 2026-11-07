@@ -10,6 +10,8 @@
   const dateForm = $('#dateForm'), dateMsg = $('#dateMsg');
   const guestForm = $('#guestForm'), guestMsg = $('#guestMsg');
   const params = new URLSearchParams(location.search);
+  const PAY = flow.dataset.pay === '1' ? 4 : 0, DONE = panels.length;
+  const payForm = $('#flowPayForm');
   const state = { q: null, nights: 0, rooms: [], room: null, preferred: params.get('room'), discount: null };
   const fmt = d => new Date(d + 'T00:00:00').toLocaleDateString('en-PH', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
@@ -113,6 +115,21 @@
     renderSummary();
   });
 
+  // Payment step and the final screen
+  function showDone(paid) {
+    state.paid = paid;
+    $('#doneTitle').textContent = paid ? 'Payment sent for review' : 'Request sent';
+    $('#doneText').textContent = paid
+      ? 'Thank you. Our team will check your payment and approve it, and we will email you as soon as it is done. Your booking is confirmed by the reservations team, usually within a day. Your receipt link is in your email.'
+      : 'This is a request, not a confirmed booking. The reservations team confirms by email or phone, usually within a day.' + (PAY ? ' You can send your payment any time with the link in your email, or tap Pay now.' : '') + ' We emailed you a link to your receipt, so keep that email.';
+    $('#payLink')?.classList.toggle('hidden', paid);
+    go(DONE);
+  }
+  if (PAY) {
+    CLPay.init(payForm, { onSent: () => showDone(true) });
+    $('#skipPay').addEventListener('click', () => showDone(false));
+  }
+
   // Events
   dateForm.addEventListener('submit', async e => {
     e.preventDefault();
@@ -137,7 +154,19 @@
     const btn = guestForm.querySelector('button'); btn.disabled = true;
     try {
       const r = await api('booking.php', { ...state.q, room: state.room.id, ...Object.fromEntries(new FormData(guestForm)), code: state.discount ? state.discount.code : '' });
-      if (r.ok) { $('#refCode').textContent = r.ref; $('#receiptLink').href = r.receipt; $('#payLink').href = r.pay; state.summary = r.summary; $('#imagePreview').classList.add('hidden'); guestMsg.textContent = ''; guestForm.reset(); go(4); loadCrypto(r.ref); return; }
+      if (r.ok) {
+        guestMsg.textContent = ''; guestForm.reset();
+        Object.assign(state, { ref: r.ref, token: r.token, due: r.total, summary: r.summary, paid: false });
+        $('#refCode').textContent = r.ref; $('#receiptLink').href = r.receipt; $('#imagePreview').classList.add('hidden');
+        const pay = $('#payLink'); if (pay) pay.href = r.pay;
+        if (PAY) {
+          $('#payRef').textContent = r.ref; $('#payDue').textContent = peso(r.total);
+          payForm.reset(); payForm.elements.ref.value = r.ref; payForm.elements.t.value = r.token;
+          payForm.elements.amount.value = r.total; payForm.elements.amount.max = r.total;
+          go(PAY);
+        } else showDone(false);
+        return;
+      }
       if (r.unavailable) { guestMsg.textContent = r.error; if (await search(state.q)) go(2); return; }
       for (const [k, m] of Object.entries(r.errors || {})) { const p = guestForm.querySelector(`.err[data-for="${k}"]`); if (p) p.textContent = m; }
       guestMsg.textContent = r.errors ? 'Fix the highlighted fields and send again.' : (r.error || 'Could not send. Try again.');
@@ -155,22 +184,6 @@
       const a = document.createElement('a'); a.href = url; a.download = `receipt-${state.summary.ref}.png`; document.body.append(a); a.click(); a.remove();
     } catch { alert('The image could not be created. Please use the PDF receipt instead.'); }
     btn.disabled = false; btn.textContent = label;
-  });
-
-  async function loadCrypto(ref) {
-    try {
-      const r = await api('crypto.php'); if (!r.ok || !r.wallets.length) return;
-      $('#cryptoRef').textContent = ref;
-      $('#cryptoList').innerHTML = r.wallets.map(w => `<li class="rounded-xl bg-white p-4">
-        <p class="text-sm font-semibold">${esc(w.coin)} on ${esc(w.network)}${w.label ? ` <span class="font-normal text-lagoon/60">· ${esc(w.label)}</span>` : ''}</p>
-        <div class="mt-2 flex items-start justify-between gap-3"><code class="break-all text-xs">${esc(w.address)}</code>
-        <button type="button" data-copy="${esc(w.address)}" class="shrink-0 rounded-lg border border-lagoon/20 px-3 py-1 text-xs font-semibold hover:bg-lagoon hover:text-white">Copy</button></div></li>`).join('');
-      $('#cryptoBox').classList.remove('hidden');
-    } catch { /* crypto details are optional */ }
-  }
-  document.addEventListener('click', async e => {
-    const c = e.target.closest('[data-copy]'); if (!c) return;
-    try { await navigator.clipboard.writeText(c.dataset.copy); c.textContent = 'Copied'; setTimeout(() => c.textContent = 'Copy', 1500); } catch { c.textContent = 'Select and copy'; }
   });
 
   // Arriving from the home page with dates (and maybe a room) in the URL

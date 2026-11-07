@@ -12,12 +12,19 @@ $sec('contact', 'Contact', 'Used on the contact page, footer, Messenger chat but
   $f('email', 'Reservations email', 'email') . '<div class="grid gap-4 sm:grid-cols-2">' . $f('phone', 'Phone') . $f('messenger', 'Facebook page for Messenger', 'text', 'placeholder="yourpagename"') . '</div>'
   . '<p class="-mt-2 text-xs text-slate-500">Type the page name from your page link (facebook.com/<strong>yourpagename</strong>). Guests who tap Chat with us open a Messenger conversation with that page. Leave empty to hide the button.</p>'
   . '<div><label class="lbl" for="s_address">Address (one line per row)</label><textarea class="input" id="s_address" name="address" rows="3"></textarea></div>');
-$sec('payments', 'Payment instructions', 'Shown to guests on their payment page, where they send you their payment details for you to approve.',
-  '<div><label class="lbl" for="s_payment_instructions">How guests should pay</label><textarea class="input" id="s_payment_instructions" name="payment_instructions" rows="6" placeholder="Bank name, account name and number, GCash or Maya number, and anything else guests need"></textarea></div>');
 $sec('stay', 'Stay rules', 'Applied to the booking flow and shown on the FAQ and contact pages.',
   '<div class="grid gap-4 sm:grid-cols-2">' . $f('check_in', 'Check-in time') . $f('check_out', 'Check-out time') . $f('max_nights', 'Maximum nights per request', 'number', 'min="1" max="90"') . $f('currency', 'Currency symbol', 'text', 'maxlength="3"') . '</div>');
 $sec('social', 'Social links', 'Leave empty to keep the placeholder link.', $f('facebook', 'Facebook page', 'url', 'placeholder="https://facebook.com/yourpage"') . $f('instagram', 'Instagram profile', 'url', 'placeholder="https://instagram.com/yourhandle"'));
 ?>
+  <section id="accounts" class="card mb-6 grid gap-6 p-6 lg:grid-cols-3 lg:p-8">
+    <div><h2 class="font-semibold">Bank and e-wallet accounts</h2><p class="mt-1 text-sm text-slate-500">Guests see these on the payment step when they book, and on their payment page. They send the money, then you approve or decline it in Payments. Crypto wallets are set up below.</p></div>
+    <form id="accountsForm" class="space-y-4 lg:col-span-2" novalidate>
+      <div id="accountRows" class="space-y-3"></div>
+      <button type="button" id="addAccount" class="btn-ghost btn-sm">Add account</button>
+      <div><label class="lbl" for="s_payment_instructions">Extra note for guests (optional)</label><textarea class="input" id="s_payment_instructions" name="payment_instructions" rows="3" placeholder="e.g. Please use your booking reference as the payment message"></textarea></div>
+      <div class="flex items-center gap-3"><button class="btn-primary">Save accounts</button><p class="text-sm" data-msg></p></div>
+    </form>
+  </section>
   <section id="crypto" class="card mb-6 grid gap-6 p-6 lg:grid-cols-3 lg:p-8">
     <div><h2 class="font-semibold">Crypto payments</h2><p class="mt-1 text-sm text-slate-500">Wallets guests can pay to after they send a booking request. You record each payment yourself on the Payments page once the transaction arrives.</p></div>
     <form id="cryptoForm" class="space-y-4 lg:col-span-2" novalidate>

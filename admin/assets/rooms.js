@@ -3,8 +3,11 @@
   const MAX = +document.querySelector('meta[name=max-images]')?.content || 10;
   const CAPTIONS = ['Living room', 'Parlor', 'Master bedroom', 'Bedroom 2', 'Bedroom 3', 'Kitchen', 'Bathroom', 'Terrace', 'Exterior', 'View'];
   const FALLBACK = 'linear-gradient(135deg,#14405F,#2E6C8A 55%,#F2A65A)';
+  // Photos live in assets/img/rooms/. Seeded rooms store just the file name; photos uploaded
+  // in the admin store "rooms/<file>". This handles both so the folder is never doubled or missing.
+  const imgUrl = f => '../assets/img/' + (String(f).includes('/') ? f : 'rooms/' + f);
   let rooms = [];
-  const coverBg = r => `background-image:${r.images?.[0] ? `url('../assets/img/${esc(r.images[0].file)}'),` : ''}${FALLBACK}`;
+  const coverBg = r => `background-image:${r.images?.[0] ? `url('${esc(imgUrl(r.images[0].file))}'),` : ''}${FALLBACK}`;
 
   async function load() {
     const r = await api('rooms', 'list'); if (!r.ok) { toast(r.error, 'err'); return; }
@@ -43,7 +46,7 @@
     let roomId = room?.id || '';
     const r = room || { name: '', blurb: '', beds: '', guests: 2, units: 1, price: 0, amenities: [], featured: 0, active: 1 };
     // Gallery state: existing photos ('old') and newly chosen files ('new'); applied when the form is saved.
-    let items = (room?.images || []).map(i => ({ kind: 'old', id: +i.id, caption: i.caption || '', url: `../assets/img/${i.file}` }));
+    let items = (room?.images || []).map(i => ({ kind: 'old', id: +i.id, caption: i.caption || '', url: imgUrl(i.file) }));
     const removed = [];
 
     const f = document.createElement('form'); f.className = 'space-y-4'; f.noValidate = true;
@@ -143,7 +146,7 @@
     };
 
     $('[data-del]', f)?.addEventListener('click', async () => {
-      if (!(await confirm('Delete this room?', 'The room and all its photos are removed. Rooms with bookings cannot be deleted.', 'Delete'))) return;
+      if (!(await confirm('Delete this room?', 'The room and all its photos are removed. Existing bookings for this room are kept.', 'Delete'))) return;
       const x = await api('rooms', 'delete', { id: room.id });
       if (x.ok) { toast('Room deleted'); drawer.close(); load(); } else toast(x.error, 'err');
     });
