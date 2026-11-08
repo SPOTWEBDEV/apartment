@@ -66,8 +66,14 @@ function messenger_handle(string $v): string {
 }
 /** Link that opens a Messenger chat with the business page ('' until set in Admin > Settings). */
 function messenger_url(): string {
-  $h = messenger_handle((string)cfg('messenger', ''));
-  return $h === '' ? '' : 'https://m.me/' . rawurlencode($h);
+  $raw = trim((string)cfg('messenger', ''));
+  if ($raw === '') return '';
+  $h = messenger_handle($raw);
+  if ($h !== '') return 'https://m.me/' . rawurlencode($h);
+  // Not a format messenger_handle() recognises: use what the admin typed.
+  if (preg_match('#^https?://#i', $raw)) return $raw;                    // a full link
+  if (preg_match('#^(m\.me|fb\.me|(www\.)?facebook\.com)/#i', $raw)) return 'https://' . $raw;
+  return 'https://m.me/' . rawurlencode(ltrim($raw, '@/'));               // a plain page name
 }
 function maps_url(): string {
   return 'https://www.google.com/maps/search/?api=1&query=' . rawurlencode(cfg('site_name') . ', ' . implode(', ', cfg('address', [])));

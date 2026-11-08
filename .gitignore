@@ -1,5 +1,6 @@
-.env
 storage/*.sqlite*
 storage/*.jsonl
 storage/*.imported
 assets/img/room-*
+config.bat
+node_modules
