@@ -39,7 +39,7 @@ switch ($action) {
     } elseif ($s === 'contact') {
       if (!filter_var(p('email'), FILTER_VALIDATE_EMAIL)) respond(['ok' => false, 'error' => 'Enter a valid email address.'], 422);
       $mh = messenger_handle(p('messenger'));
-      if (p('messenger') !== '' && $mh === '') respond(['ok' => false, 'error' => 'That does not look like a Facebook page name. Use the part after facebook.com/ in your page link.'], 422);
+      if ($mh === '') $mh = clean(p('messenger'), 120); // keep whatever was typed
       put('email', p('email'));
       put('phone', clean(p('phone'), 40));
       put('phone_tel', preg_replace('/[^\d+]/', '', p('phone')));
