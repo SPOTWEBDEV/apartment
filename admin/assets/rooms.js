@@ -6,6 +6,7 @@
   // Photos live in assets/img/rooms/. Seeded rooms store just the file name; photos uploaded
   // in the admin store "rooms/<file>". This handles both so the folder is never doubled or missing.
   const imgUrl = f => '../assets/img/' + (String(f).includes('/') ? f : 'rooms/' + f);
+  const SECTION_TITLES = ['Occupancy Limit', 'Pet Fee', 'Room Details', 'Room facilities include', 'Bathroom', 'Good to know'];
   let rooms = [];
   const coverBg = r => `background-image:${r.images?.[0] ? `url('${esc(imgUrl(r.images[0].file))}'),` : ''}${FALLBACK}`;
 
@@ -44,18 +45,29 @@
 
   function form(room) {
     let roomId = room?.id || '';
-    const r = room || { name: '', blurb: '', beds: '', guests: 2, units: 1, price: 0, amenities: [], featured: 0, active: 1 };
+    const r = room || { name: '', blurb: '', beds: '', guests: 2, units: 1, price: 0, amenities: [], featured: 0, active: 1, description: '', details: [] };
     // Gallery state: existing photos ('old') and newly chosen files ('new'); applied when the form is saved.
     let items = (room?.images || []).map(i => ({ kind: 'old', id: +i.id, caption: i.caption || '', url: imgUrl(i.file) }));
     const removed = [];
+    // Extra detail sections (Occupancy Limit, Pet Fee, Room Details...): a title plus one item per line.
+    let sections = (r.details || []).map(d => ({ title: d.title || '', items: (d.items || []).join('\n') }));
 
     const f = document.createElement('form'); f.className = 'space-y-4'; f.noValidate = true;
     f.innerHTML = `
       <div><label class="lbl">Name</label><input class="input" name="name" value="${esc(r.name)}" placeholder="3-bedroom flat"></div>
       <div><label class="lbl">Short description</label><textarea class="input" name="blurb" rows="2">${esc(r.blurb)}</textarea></div>
+      <div><label class="lbl">Full description (shown on the room page)</label><textarea class="input" name="description" rows="5" placeholder="A longer description of the room">${esc(r.description || '')}</textarea></div>
       <div class="grid grid-cols-2 gap-3"><div><label class="lbl">Beds</label><input class="input" name="beds" value="${esc(r.beds)}" placeholder="3 bedrooms"></div><div><label class="lbl">Price per night</label><input class="input" type="number" min="0" name="price" value="${r.price}"></div>
       <div><label class="lbl">Max guests</label><input class="input" type="number" min="1" name="guests" value="${r.guests}"></div><div><label class="lbl">Units available</label><input class="input" type="number" min="1" name="units" value="${r.units}"></div></div>
       <div><label class="lbl">Amenities (one per line)</label><textarea class="input" name="amenities" rows="3">${esc(r.amenities.join('\n'))}</textarea></div>
+
+      <div>
+        <div class="flex items-center justify-between"><label class="lbl !mb-0">More details</label><span class="text-xs text-slate-400">Occupancy, pet fee, room size, facilities</span></div>
+        <div id="sections" class="mt-2 space-y-3"></div>
+        <datalist id="secTitles">${SECTION_TITLES.map(c => `<option value="${c}">`).join('')}</datalist>
+        <div class="mt-2 flex flex-wrap gap-2" id="secAdd">${SECTION_TITLES.slice(0, 4).map(c => `<button type="button" class="btn-ghost btn-sm" data-add="${c}">+ ${c}</button>`).join('')}<button type="button" class="btn-ghost btn-sm" data-add="">+ Other section</button></div>
+        <p class="mt-2 text-xs text-slate-500">Each section has a title and one item per line, for example Pet Fee: "Charges of PHP 1500 per pet per night".</p>
+      </div>
 
       <div>
         <div class="flex items-center justify-between"><label class="lbl !mb-0">Photos</label><span id="cnt" class="text-xs text-slate-400"></span></div>
@@ -97,6 +109,29 @@
     };
     renderTiles();
 
+    const secBox = $('#sections', f);
+    const renderSections = () => {
+      secBox.innerHTML = sections.map((d, i) => `
+        <div class="rounded-xl border border-slate-200 p-3" data-s="${i}">
+          <div class="flex items-center gap-2"><input class="input !py-1.5 text-sm font-semibold" data-st list="secTitles" value="${esc(d.title)}" placeholder="Section title, e.g. Pet Fee" maxlength="60" aria-label="Section ${i + 1} title"><button type="button" class="btn-danger btn-sm shrink-0" data-srm>Remove</button></div>
+          <textarea class="input mt-2 text-sm" data-si rows="3" placeholder="One item per line" aria-label="Section ${i + 1} items">${esc(d.items)}</textarea>
+        </div>`).join('');
+    };
+    renderSections();
+    $('#secAdd', f).addEventListener('click', e => {
+      const b = e.target.closest('[data-add]'); if (!b) return;
+      if (sections.length >= 12) { toast('You can add up to 12 sections.', 'err'); return; }
+      sections.push({ title: b.dataset.add, items: '' }); renderSections();
+      secBox.querySelector('[data-s]:last-child textarea')?.focus();
+    });
+    secBox.addEventListener('input', e => {
+      const box = e.target.closest('[data-s]'); if (!box) return; const d = sections[+box.dataset.s];
+      if (e.target.matches('[data-st]')) d.title = e.target.value; else if (e.target.matches('[data-si]')) d.items = e.target.value;
+    });
+    secBox.addEventListener('click', e => {
+      const box = e.target.closest('[data-s]'); if (box && e.target.closest('[data-srm]')) { sections.splice(+box.dataset.s, 1); renderSections(); }
+    });
+
     const add = files => {
       let note = '';
       for (const file of files) {
@@ -123,7 +158,8 @@
 
     f.onsubmit = async e => {
       e.preventDefault(); const btn = $('button', f); btn.disabled = true; status.className = 'text-sm text-slate-500'; status.textContent = 'Saving room…';
-      const fd = new FormData(); for (const k of ['name', 'blurb', 'beds', 'price', 'guests', 'units', 'amenities']) fd.set(k, f[k].value);
+      const fd = new FormData(); for (const k of ['name', 'blurb', 'description', 'beds', 'price', 'guests', 'units', 'amenities']) fd.set(k, f[k].value);
+      fd.set('details', JSON.stringify(sections.map(d => ({ title: d.title.trim(), items: d.items.split(/\r?\n/).map(x => x.trim()).filter(Boolean) })).filter(d => d.title || d.items.length)));
       fd.set('id', roomId); fd.set('active', f.active.checked ? 1 : 0); fd.set('featured', f.featured.checked ? 1 : 0);
       const saved = await api('rooms', 'save', fd);
       if (!saved.ok) { status.className = 'text-sm text-red-700'; status.textContent = saved.error; btn.disabled = false; return; }

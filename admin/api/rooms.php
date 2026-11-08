@@ -3,6 +3,15 @@ require_once __DIR__ . '/_boot.php';
 
 const MAX_BYTES = 12 * 1024 * 1024;
 
+// Extra room fields: a long description and detail sections (Occupancy Limit, Pet Fee...).
+// The columns are added automatically the first time this file runs.
+try {
+  $have = [];
+  foreach ($pdo->query('PRAGMA table_info(rooms)') as $c) $have[$c['name']] = true;
+  if (empty($have['description'])) $pdo->exec("ALTER TABLE rooms ADD COLUMN description TEXT NOT NULL DEFAULT ''");
+  if (empty($have['details']))     $pdo->exec("ALTER TABLE rooms ADD COLUMN details TEXT NOT NULL DEFAULT '[]'");
+} catch (Throwable $e) {}
+
 function img_root(): string { return __DIR__ . '/../../assets/img/'; }
 function room_images(string $id): array { return rows('SELECT * FROM room_images WHERE room_id=? ORDER BY sort, id', [$id]); }
 /** The first gallery photo is the cover shown on cards. */
@@ -20,6 +29,18 @@ function room_or_fail(string $id): array {
   if (!$r) respond(['ok'=>false,'error'=>'Room not found. Save the room first.'], 404);
   return $r;
 }
+/** Detail sections as JSON: [{title, items:[...]}], at most 12 sections of 30 items. */
+function clean_details(string $raw): string {
+  $in = json_decode($raw, true); if (!is_array($in)) return '[]';
+  $out = [];
+  foreach (array_slice($in, 0, 12) as $s) {
+    $title = clean((string)($s['title'] ?? ''), 60);
+    $items = array_values(array_filter(array_map(fn($x) => clean((string)$x, 200), array_slice((array)($s['items'] ?? []), 0, 30))));
+    if ($title === '' && !$items) continue;
+    $out[] = ['title'=>$title, 'items'=>$items];
+  }
+  return json_encode($out, JSON_UNESCAPED_UNICODE);
+}
 
 switch ($action) {
   case 'list':
@@ -27,6 +48,8 @@ switch ($action) {
     $rooms = rows('SELECT * FROM rooms ORDER BY featured DESC, created_at, id');
     foreach ($rooms as &$r) {
       $r['amenities'] = json_decode($r['amenities'] ?: '[]', true) ?: [];
+      $r['details'] = json_decode($r['details'] ?? '[]', true) ?: [];
+      $r['description'] = $r['description'] ?? '';
       $r['images'] = room_images($r['id']);
       $r['occupied'] = (int)val("SELECT COUNT(*) FROM bookings WHERE room_id=? AND status IN ('confirmed','checked_in') AND checkin<=? AND checkout>?", [$r['id'], $today, $today]);
       $r['upcoming'] = (int)val("SELECT COUNT(*) FROM bookings WHERE room_id=? AND status IN ('pending','confirmed') AND checkin>?", [$r['id'], $today]);
@@ -40,15 +63,16 @@ switch ($action) {
     if ($guests < 1 || $units < 1 || $price < 0) respond(['ok'=>false,'error'=>'Guests and units must be at least 1, and the price cannot be negative.'], 422);
     $amen = array_values(array_filter(array_map(fn($x) => clean($x, 60), preg_split('/\R/', p('amenities')))));
     $featured = pint('featured') ? 1 : 0; $active = pint('active') ? 1 : 0;
+    $desc = clean(p('description'), 2000); $details = clean_details(p('details', '[]'));
     if ($id === '') {
       $base = trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($name)), '-') ?: 'room'; $id = $base; $n = 2;
       while (val('SELECT 1 FROM rooms WHERE id=?', [$id])) $id = $base . '-' . $n++;
-      $pdo->prepare('INSERT INTO rooms(id,name,blurb,beds,guests,units,price,img,amenities,featured,active,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)')
-          ->execute([$id, $name, clean(p('blurb'), 300), clean(p('beds'), 60), $guests, $units, $price, '', json_encode($amen), $featured, $active, date('Y-m-d H:i:s')]);
+      $pdo->prepare('INSERT INTO rooms(id,name,blurb,description,details,beds,guests,units,price,img,amenities,featured,active,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+          ->execute([$id, $name, clean(p('blurb'), 300), $desc, $details, clean(p('beds'), 60), $guests, $units, $price, '', json_encode($amen), $featured, $active, date('Y-m-d H:i:s')]);
     } else {
       room_or_fail($id);
-      $pdo->prepare('UPDATE rooms SET name=?, blurb=?, beds=?, guests=?, units=?, price=?, amenities=?, featured=?, active=? WHERE id=?')
-          ->execute([$name, clean(p('blurb'), 300), clean(p('beds'), 60), $guests, $units, $price, json_encode($amen), $featured, $active, $id]);
+      $pdo->prepare('UPDATE rooms SET name=?, blurb=?, description=?, details=?, beds=?, guests=?, units=?, price=?, amenities=?, featured=?, active=? WHERE id=?')
+          ->execute([$name, clean(p('blurb'), 300), $desc, $details, clean(p('beds'), 60), $guests, $units, $price, json_encode($amen), $featured, $active, $id]);
     }
     if ($featured) $pdo->prepare('UPDATE rooms SET featured=0 WHERE id!=?')->execute([$id]);
     respond(['ok'=>true, 'id'=>$id]);
