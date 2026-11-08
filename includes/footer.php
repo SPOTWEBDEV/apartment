@@ -50,6 +50,9 @@
   Chat with us
 </a><?php endif; ?>
 
+<script src="//code.jivosite.com/widget/kyycjv93Sd" async></script>
+
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
 <script src="assets/js/app.js" defer></script>
