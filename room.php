@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/includes/bootstrap.php';
+require_once __DIR__ . '/includes/room_details.php';
 
 $id = (string)($_GET['room'] ?? '');
 $room = null;
@@ -33,6 +34,7 @@ $doneN = count($steps);
   <?php render_gallery($room, 'min-w-0'); ?>
   <div data-reveal>
     <p class="text-lg text-lagoon/80"><?= e($room['blurb']) ?></p>
+    <?php render_room_details($room['id']); ?>
     <ul class="mt-6 grid max-w-md gap-x-6 gap-y-2 text-lagoon/80 sm:grid-cols-2">
       <?php foreach ($room['amenities'] as $a): ?><li class="border-l-2 border-bronze pl-3"><?= e($a) ?></li><?php endforeach; ?>
     </ul>
